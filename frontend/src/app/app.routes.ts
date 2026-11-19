@@ -65,6 +65,17 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'admin/payments',
+    canActivate: [legalGuard],
+    loadComponent: () =>
+      import('./pages/admin-payments/admin-payments.page').then((m) => m.AdminPaymentsPage),
+  },
+  {
+    path: 'wallet',
+    canActivate: [legalGuard],
+    loadComponent: () => import('./pages/wallet/wallet.page').then((m) => m.WalletPage),
+  },
+  {
     path: 'customer',
     canActivate: [legalGuard],
     loadComponent: () =>

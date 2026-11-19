@@ -65,6 +65,22 @@
     <p>Start: <strong>{{ pins.start_pin }}</strong> · Finish: <strong>{{ pins.finish_pin }}</strong></p>
   </div>
 
+  <div class="pay" *ngIf="isCustomer && job.payment_method === 'ESCROW'">
+    <h3>Escrow payment (test mode)</h3>
+    <ion-list>
+      <ion-item>
+        <ion-select label="Test card" labelPlacement="stacked" [(ngModel)]="testCard">
+          <ion-select-option value="succeed">succeed</ion-select-option>
+          <ion-select-option value="fail">fail</ion-select-option>
+          <ion-select-option value="insufficient_funds">insufficient_funds</ion-select-option>
+          <ion-select-option value="webhook_delay">webhook_delay</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-list>
+    <ion-button expand="block" (click)="payEscrow()">Pay into escrow</ion-button>
+    <p class="ok" *ngIf="payMessage">{{ payMessage }}</p>
+  </div>
+
   <div class="chat" *ngIf="job.status !== 'REQUESTED' && job.status !== 'OFFERED' && job.status !== 'EXPIRED'">
     <h3>Chat</h3>
     <div class="chat-log">

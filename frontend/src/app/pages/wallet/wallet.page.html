@@ -1,0 +1,43 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/worker"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Wallet</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="banner" *ngIf="testMode || wallet?.test_mode">
+    <ion-badge color="warning">Test mode — mock payments</ion-badge>
+  </div>
+
+  <div *ngIf="wallet">
+    <p>Available: <strong>{{ zar(wallet.available_cents) }}</strong></p>
+    <p>Pending: {{ zar(wallet.pending_cents) }}</p>
+    <p>
+      Debt: {{ zar(wallet.debt_cents) }}
+      <span *ngIf="wallet.blocked_from_accepts" class="error">
+        (blocks new accepts until settled)
+      </span>
+    </p>
+    <ion-button expand="block" (click)="payout()">Request payout</ion-button>
+    <p class="muted">Minimum payout {{ zar(wallet.min_payout_cents) }}. Verified bank required.</p>
+  </div>
+
+  <h2>Ledger</h2>
+  <ion-list>
+    <ion-item *ngFor="let row of ledger">
+      <ion-label>
+        <h2>{{ row.entry_type }} · {{ zar(row.amount_cents) }}</h2>
+        <p>
+          avail {{ zar(row.balance_available_after) }} · debt
+          {{ zar(row.balance_debt_after) }}
+        </p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <p class="ok" *ngIf="message">{{ message }}</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+</ion-content>

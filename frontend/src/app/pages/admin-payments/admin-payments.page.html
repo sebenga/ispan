@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Mock payments</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="autoRelease()">Auto-release</ion-button>
+      <ion-button (click)="reload()">Refresh</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <p *ngIf="data">Provider: {{ data.provider }} · test mode {{ data.test_mode }}</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p *ngIf="message">{{ message }}</p>
+
+  <h2>Payments</h2>
+  <ion-list *ngIf="data?.payments?.length">
+    <ion-item *ngFor="let p of data.payments">
+      <ion-label>
+        <h2>{{ p.status }} · R{{ (p.amount_cents / 100).toFixed(2) }}</h2>
+        <p>{{ p.provider_ref }} · card {{ p.test_card || '—' }}</p>
+      </ion-label>
+      <ion-button slot="end" size="small" (click)="fireWebhook(p.id)">Fire webhook</ion-button>
+    </ion-item>
+  </ion-list>
+</ion-content>

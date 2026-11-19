@@ -1,0 +1,13 @@
+.banner {
+  margin-bottom: 1rem;
+}
+.muted {
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+}
+.error {
+  color: var(--ion-color-danger);
+}
+.ok {
+  color: var(--ion-color-success-shade, #2dd36f);
+}

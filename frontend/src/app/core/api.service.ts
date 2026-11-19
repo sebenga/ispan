@@ -153,6 +153,51 @@ export class ApiService {
     );
   }
 
+  payEscrow(jobId: string, test_card = 'succeed') {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/pay/escrow/`,
+      { test_card },
+      { headers: this.headers() },
+    );
+  }
+
+  getWallet() {
+    return this.http.get<any>(`${environment.apiBaseUrl}/wallets/me/`, {
+      headers: this.headers(),
+    });
+  }
+
+  getWalletLedger() {
+    return this.http.get<{ results: any[] }>(`${environment.apiBaseUrl}/wallets/me/ledger/`, {
+      headers: this.headers(),
+    });
+  }
+
+  requestPayout(amount_cents?: number) {
+    const body = amount_cents != null ? { amount_cents } : {};
+    return this.http.post<any>(`${environment.apiBaseUrl}/wallets/me/payouts/`, body, {
+      headers: this.headers(),
+    });
+  }
+
+  getReceipt(jobId: string) {
+    return this.http.get<any>(`${environment.apiBaseUrl}/jobs/${jobId}/receipt/`, {
+      headers: this.headers(),
+    });
+  }
+
+  adminMockPayments() {
+    return this.http.get<any>(`${environment.apiBaseUrl}/admin/payments/mock/`, {
+      headers: this.headers(),
+    });
+  }
+
+  adminMockAction(payload: Record<string, unknown>) {
+    return this.http.post<any>(`${environment.apiBaseUrl}/admin/payments/mock/`, payload, {
+      headers: this.headers(),
+    });
+  }
+
   getWorkerProfile() {
     return this.http.get<any>(`${environment.apiBaseUrl}/auth/worker/profile/`, {
       headers: this.headers(),

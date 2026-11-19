@@ -15,6 +15,7 @@ api_v1 = [
     path("", include("apps.notifications.urls")),
     path("", include("apps.catalog.urls")),
     path("", include("apps.jobs.urls")),
+    path("", include("apps.payments.urls")),
     path("", include("apps.safety.urls")),
     path("internal/realtime/authorize/", RealtimeAuthorizeView.as_view(), name="rt-authorize"),
 ]

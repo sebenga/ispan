@@ -84,6 +84,10 @@ def accept_offer(*, offer: JobOffer, worker) -> Job:
     profile = getattr(worker, "worker_profile", None)
     if not profile or profile.verification_status != WorkerProfile.VerificationStatus.VERIFIED:
         raise ValueError("Worker must be verified to accept.")
+    from apps.payments.wallet import worker_debt_blocks_accepts
+
+    if worker_debt_blocks_accepts(worker):
+        raise ValueError("Worker debt exceeds the cash-debt threshold; settle before accepting jobs.")
 
     job.worker = worker
     job.status = Job.Status.ACCEPTED
@@ -221,6 +225,9 @@ def advance_status(*, job: Job, actor, new_status: str, pin: str | None = None) 
             raise PermissionError("Only customer can confirm completion")
         if job.status != Job.Status.COMPLETED:
             raise ValueError("Job not completed yet")
+        from apps.payments.services import settle_job_on_confirm
+
+        settle_job_on_confirm(job=job)
         job.status = Job.Status.CONFIRMED
         job.confirmed_at = timezone.now()
         job.save()
@@ -246,6 +253,10 @@ def advance_status(*, job: Job, actor, new_status: str, pin: str | None = None) 
     prev = job.status
     job.status = new_status
     job.save()
+    if new_status == Job.Status.COMPLETED:
+        from apps.payments.services import schedule_auto_release
+
+        schedule_auto_release(job)
     log_event(job, "status", actor=actor, from_status=prev, to_status=new_status)
     emit_job(job)
     return job
@@ -265,20 +276,12 @@ def cancel_job(*, job: Job, actor) -> Job:
     job.cancellation_snapshot = snapshot
     job.save()
 
-    # Soft-touch escrow refund math is recorded; capture/settlement is Phase 4.
-    payment = getattr(job, "payment", None)
-    if payment and snapshot.get("escrow_refund_cents") is not None:
-        try:
-            from apps.payments.escrow import refund_escrow
-            from apps.payments.models import Payment
+    try:
+        from apps.payments.services import settle_cancellation_fees
 
-            if payment.method == Payment.Method.ESCROW and payment.status in {
-                Payment.Status.HELD,
-                Payment.Status.AUTHORIZED,
-            }:
-                refund_escrow(payment, snapshot["escrow_refund_cents"] or payment.amount_cents)
-        except Exception:
-            pass
+        settle_cancellation_fees(job=job, snapshot=snapshot)
+    except Exception:
+        pass
 
     JobOffer.objects.filter(
         job=job, status__in=[JobOffer.Status.NOTIFIED, JobOffer.Status.SEEN]

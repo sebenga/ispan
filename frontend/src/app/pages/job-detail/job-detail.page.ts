@@ -13,6 +13,8 @@ import {
   IonItem,
   IonLabel,
   IonList,
+  IonSelect,
+  IonSelectOption,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
@@ -40,6 +42,8 @@ import { RealtimeService } from '../../core/realtime.service';
     IonLabel,
     IonButton,
     IonInput,
+    IonSelect,
+    IonSelectOption,
   ],
   templateUrl: './job-detail.page.html',
   styleUrls: ['./job-detail.page.scss'],
@@ -60,6 +64,8 @@ export class JobDetailPage implements OnInit, OnDestroy {
   navigation: { google_maps?: string | null; waze?: string | null } | null = null;
   etaMinutes: number | null = null;
   sosMessage = '';
+  testCard: 'succeed' | 'fail' | 'insufficient_funds' | 'webhook_delay' = 'succeed';
+  payMessage = '';
   private tickTimer: ReturnType<typeof setInterval> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private rtSub: Subscription | null = null;
@@ -222,6 +228,18 @@ export class JobDetailPage implements OnInit, OnDestroy {
   openNav(kind: 'google_maps' | 'waze') {
     const url = this.navigation?.[kind];
     if (url) window.open(url, '_blank');
+  }
+
+  payEscrow() {
+    this.payMessage = '';
+    this.error = '';
+    this.api.payEscrow(this.job.id, this.testCard).subscribe({
+      next: (res) => {
+        this.payMessage = `Payment ${res.payment.status}`;
+        this.reload();
+      },
+      error: (err) => (this.error = err?.error?.detail || 'Payment failed'),
+    });
   }
 
   triggerSos() {

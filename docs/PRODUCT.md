@@ -38,3 +38,4 @@ Standalone “Uber for labour” marketplace. Launch city: **Cape Town**, with c
 - Cancellation fees use the policy snapshotted on the job at booking; settlement lands in Phase 4.
 - Declining an offer never creates a strike.
 - Phase 3: location pings only in `EN_ROUTE` / `ARRIVED` / `IN_PROGRESS`. Socket rooms are authorised via Django internal API. SOS never claims to replace 10111 / 10177 / 112.
+- Phase 4: MockProvider is default; PayFast/Yoco/Paystack/Ozow are placeholders. Cash commission becomes worker debt and can block accepts above the threshold.
