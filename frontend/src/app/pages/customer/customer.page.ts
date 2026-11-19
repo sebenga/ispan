@@ -4,18 +4,15 @@ import { Router, RouterLink } from '@angular/router';
 import {
   IonBadge,
   IonButton,
-  IonButtons,
   IonContent,
-  IonHeader,
   IonItem,
   IonLabel,
   IonList,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { SoundService } from '../../core/sound.service';
 
 @Component({
   selector: 'app-customer',
@@ -23,11 +20,7 @@ import { AuthService } from '../../core/auth.service';
   imports: [
     CommonModule,
     RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
-    IonButtons,
     IonButton,
     IonList,
     IonItem,
@@ -45,6 +38,7 @@ export class CustomerPage implements OnInit {
     private readonly api: ApiService,
     private readonly auth: AuthService,
     private readonly router: Router,
+    private readonly sound: SoundService,
   ) {}
 
   ngOnInit() {
@@ -54,6 +48,7 @@ export class CustomerPage implements OnInit {
       return;
     }
     this.name = user.first_name;
+    this.sound.unlock();
     this.api.getJobs().subscribe((jobs) => (this.jobs = jobs));
   }
 
@@ -61,7 +56,12 @@ export class CustomerPage implements OnInit {
     return `R${(cents / 100).toFixed(0)}`;
   }
 
+  tap() {
+    this.sound.tap();
+  }
+
   logout() {
+    this.sound.tap();
     this.auth.logout();
   }
 }

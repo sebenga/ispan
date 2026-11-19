@@ -3,22 +3,22 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
+  IonBadge,
   IonButton,
   IonCheckbox,
   IonContent,
-  IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonList,
-  IonTitle,
-  IonToolbar,
-  IonNote,
-  IonBadge,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { volumeHighOutline, volumeMuteOutline } from 'ionicons/icons';
 
 import { environment } from '../../../environments/environment';
 import { LegalService } from '../../core/legal.service';
+import { SoundService } from '../../core/sound.service';
+
+addIcons({ volumeHighOutline, volumeMuteOutline });
 
 @Component({
   selector: 'app-legal-gate',
@@ -27,17 +27,12 @@ import { LegalService } from '../../core/legal.service';
     CommonModule,
     FormsModule,
     RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
     IonList,
     IonItem,
-    IonLabel,
     IonCheckbox,
     IonButton,
     IonIcon,
-    IonNote,
     IonBadge,
   ],
   templateUrl: './legal-gate.page.html',
@@ -56,6 +51,7 @@ export class LegalGatePage implements OnInit {
   constructor(
     private readonly legal: LegalService,
     private readonly router: Router,
+    readonly sound: SoundService,
   ) {}
 
   ngOnInit() {
@@ -71,10 +67,30 @@ export class LegalGatePage implements OnInit {
     });
   }
 
-  onScroll(ev: CustomEvent) {
-    const el = ev.detail?.scrollTop != null ? ev.target : null;
-    // Mark acknowledgement once the user has scrolled the notice area.
+  onScroll(_ev: CustomEvent) {
     this.scrolled = true;
+  }
+
+  toggleSound(ev: Event) {
+    ev.stopPropagation();
+    this.sound.toggleMute();
+    if (!this.sound.muted) this.sound.tap();
+  }
+
+  scrollToConsent() {
+    this.sound.unlock();
+    this.sound.softWhoosh();
+    document.getElementById('consent')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.scrolled = true;
+  }
+
+  markRead(_doc: string) {
+    this.scrolled = true;
+    this.sound.tap();
+  }
+
+  onCheck() {
+    this.sound.tap();
   }
 
   get canAccept(): boolean {
@@ -97,13 +113,14 @@ export class LegalGatePage implements OnInit {
       next: () => {
         this.legal.rememberLocal(this.version, flags);
         this.loading = false;
+        this.sound.success();
         void this.router.navigateByUrl('/login');
       },
       error: (err) => {
-        // Persist locally even if API is briefly unavailable, so the gate is not stuck.
         if (err?.status === 0 || err?.status >= 500) {
           this.legal.rememberLocal(this.version, flags);
           this.loading = false;
+          this.sound.success();
           void this.router.navigateByUrl('/login');
           return;
         }

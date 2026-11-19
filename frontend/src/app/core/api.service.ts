@@ -12,9 +12,15 @@ export class ApiService {
   ) {}
 
   private headers(extra?: Record<string, string>) {
+    let headers = new HttpHeaders();
     const token = this.auth.accessToken;
-    const base = token ? { Authorization: `Bearer ${token}` } : {};
-    return new HttpHeaders({ ...base, ...extra });
+    if (token) headers = headers.set('Authorization', `Bearer ${token}`);
+    if (extra) {
+      for (const [key, value] of Object.entries(extra)) {
+        headers = headers.set(key, value);
+      }
+    }
+    return headers;
   }
 
   getCategories() {

@@ -16,6 +16,8 @@ import {
   logInOutline,
   personOutline,
   shieldCheckmarkOutline,
+  volumeHighOutline,
+  volumeMuteOutline,
   waterOutline,
 } from 'ionicons/icons';
 
@@ -34,6 +36,8 @@ addIcons({
   logInOutline,
   personOutline,
   shieldCheckmarkOutline,
+  volumeHighOutline,
+  volumeMuteOutline,
   waterOutline,
 });
 

@@ -1,2 +1,31 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+:root {
+  /* Cape Town trades — ocean slate + sun metal, not purple/cream AI defaults */
+  --ispan-ocean: #0c3d4a;
+  --ispan-ocean-deep: #072a33;
+  --ispan-sun: #e3a23a;
+  --ispan-sand: #f3ebe0;
+  --ispan-foam: #e8f4f2;
+  --ispan-ink: #142126;
+  --ispan-muted: #5d6f76;
+
+  --ion-color-primary: #0c3d4a;
+  --ion-color-primary-rgb: 12, 61, 74;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0a3641;
+  --ion-color-primary-tint: #24505c;
+
+  --ion-color-secondary: #e3a23a;
+  --ion-color-secondary-rgb: 227, 162, 58;
+  --ion-color-secondary-contrast: #142126;
+  --ion-color-secondary-contrast-rgb: 20, 33, 38;
+  --ion-color-secondary-shade: #c88f33;
+  --ion-color-secondary-tint: #e6ab4e;
+
+  --ion-color-warning: #e3a23a;
+  --ion-color-dark: #072a33;
+  --ion-color-dark-contrast: #f3ebe0;
+
+  --ion-font-family: 'Figtree', 'Segoe UI', sans-serif;
+  --ispan-display: 'Syne', 'Figtree', sans-serif;
+}

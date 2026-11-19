@@ -1,39 +1,48 @@
-<ion-header>
-  <ion-toolbar color="dark">
-    <ion-title>
-      <ion-icon name="log-in-outline"></ion-icon>
-      iSpan
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="login-content">
+  <div class="stage">
+    <div class="visual">
+      <img src="assets/brand/worker-portrait.jpg" alt="Independent Cape Town tradesperson" />
+      <div class="visual-fade"></div>
+      <p class="brand-mark">iSpan</p>
+    </div>
 
-<ion-content class="ion-padding">
-  <div class="banner" *ngIf="paymentTestMode">
-    <ion-badge color="warning">Test mode</ion-badge>
+    <div class="panel">
+      <div class="banner" *ngIf="paymentTestMode">
+        <ion-badge color="warning">Test mode</ion-badge>
+      </div>
+
+      <h1>Welcome back</h1>
+      <p class="muted">Log in to book a worker or take jobs across Cape Town.</p>
+
+      <ion-list lines="full" class="form">
+        <ion-item>
+          <ion-input
+            label="Email"
+            labelPlacement="stacked"
+            type="email"
+            [(ngModel)]="email"
+            (ionFocus)="unlockAudio()"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input
+            label="Password"
+            labelPlacement="stacked"
+            type="password"
+            [(ngModel)]="password"
+          ></ion-input>
+        </ion-item>
+      </ion-list>
+
+      <p class="error" *ngIf="error">{{ error }}</p>
+
+      <ion-button expand="block" class="primary" (click)="submit()" [disabled]="loading">
+        {{ loading ? 'Signing in…' : 'Log in' }}
+      </ion-button>
+
+      <ion-button expand="block" fill="clear" class="ghost" routerLink="/register" (click)="tap()">
+        Create account
+      </ion-button>
+    </div>
   </div>
-
-  <h1>Welcome back</h1>
-  <p class="muted">Log in to book a worker or take jobs.</p>
-
-  <ion-list lines="full">
-    <ion-item>
-      <ion-input label="Email" labelPlacement="stacked" type="email" [(ngModel)]="email"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Password"
-        labelPlacement="stacked"
-        type="password"
-        [(ngModel)]="password"
-      ></ion-input>
-    </ion-item>
-  </ion-list>
-
-  <p class="error" *ngIf="error">{{ error }}</p>
-
-  <ion-button expand="block" (click)="submit()" [disabled]="loading">
-    {{ loading ? 'Signing in…' : 'Log in' }}
-  </ion-button>
-
-  <ion-button expand="block" fill="clear" routerLink="/register">Create account</ion-button>
 </ion-content>

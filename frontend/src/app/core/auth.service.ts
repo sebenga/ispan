@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, tap } from 'rxjs';
@@ -56,7 +56,10 @@ export class AuthService {
 
   login(email: string, password: string) {
     return this.http
-      .post<AuthResponse>(`${environment.apiBaseUrl}/auth/login/`, { email, password })
+      .post<AuthResponse>(`${environment.apiBaseUrl}/auth/login/`, {
+        email: email.trim().toLowerCase(),
+        password,
+      })
       .pipe(tap((res) => this.persist(res)));
   }
 
@@ -94,9 +97,11 @@ export class AuthService {
     this.user$.next(res.user);
   }
 
-  private authHeaders() {
+  private authHeaders(): HttpHeaders {
     const token = this.accessToken;
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    return token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
   }
 
   private readUser(): AuthUser | null {

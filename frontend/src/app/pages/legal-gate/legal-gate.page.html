@@ -1,65 +1,94 @@
-<ion-header>
-  <ion-toolbar color="dark">
-    <ion-title>
-      <ion-icon name="shield-checkmark-outline"></ion-icon>
-      iSpan
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" (ionScroll)="onScroll($event)" [scrollEvents]="true" class="gate-content">
+  <section class="hero" aria-label="iSpan welcome">
+    <img
+      class="hero-photo"
+      src="assets/brand/hero-cape-town.jpg"
+      alt="Cape Town tradesperson ready for work"
+    />
+    <div class="hero-veil"></div>
+    <div class="hero-grain" aria-hidden="true"></div>
 
-<ion-content class="ion-padding" (ionScroll)="onScroll($event)" [scrollEvents]="true">
-  <div class="banner" *ngIf="paymentTestMode">
-    <ion-badge color="warning">Test mode</ion-badge>
-    Mock payments and notifications are active.
-  </div>
+    <button
+      type="button"
+      class="sound-toggle"
+      (click)="toggleSound($event)"
+      [attr.aria-pressed]="!sound.muted"
+      [attr.aria-label]="sound.muted ? 'Unmute sounds' : 'Mute sounds'"
+    >
+      <ion-icon [name]="sound.muted ? 'volume-mute-outline' : 'volume-high-outline'"></ion-icon>
+    </button>
 
-  <h1>Before you continue</h1>
-  <p class="lede">
-    Please read our legal notices. Workers on iSpan are independent contractors, not employees of
-    iSpan.
-  </p>
+    <div class="hero-copy">
+      <p class="brand animate-rise">iSpan</p>
+      <h1 class="animate-rise delay-1">Work that finds you. Help that shows up.</h1>
+      <p class="support animate-rise delay-2">
+        Cape Town’s marketplace for independent trades — book a cleaner, electrician or plumber with
+        verified people and escrow when you need it.
+      </p>
+      <div class="cta-row animate-rise delay-3">
+        <ion-button class="cta-primary" (click)="scrollToConsent()">
+          Get started
+        </ion-button>
+      </div>
+    </div>
 
-  <ion-note color="medium">Legal version {{ version }} (draft for counsel review)</ion-note>
+    <div class="float-card animate-float" aria-hidden="true">
+      <img src="assets/brand/worker-portrait.jpg" alt="" />
+      <div>
+        <strong>Independent contractors</strong>
+        <span>Not employees of iSpan</span>
+      </div>
+    </div>
+  </section>
 
-  <ion-list lines="none" class="links">
-    <ion-item button routerLink="/legal/terms" detail (click)="scrolled = true">
-      <ion-icon name="document-text-outline" slot="start"></ion-icon>
-      <ion-label>Terms of Service</ion-label>
-    </ion-item>
-    <ion-item button routerLink="/legal/privacy" detail (click)="scrolled = true">
-      <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
-      <ion-label>Privacy Notice</ion-label>
-    </ion-item>
-    <ion-item button routerLink="/legal/notice" detail (click)="scrolled = true">
-      <ion-icon name="home-outline" slot="start"></ion-icon>
-      <ion-label>ECTA Notice</ion-label>
-    </ion-item>
-  </ion-list>
+  <section class="consent-panel" id="consent">
+    <div class="banner" *ngIf="paymentTestMode">
+      <ion-badge color="warning">Test mode</ion-badge>
+      Mock payments and notifications are active.
+    </div>
 
-  <p class="scroll-hint" *ngIf="!scrolled">Scroll this screen, then confirm below.</p>
+    <h2>Before you continue</h2>
+    <p class="lede">
+      Read the notices, then confirm. Workers on iSpan set their own rates and remain independent
+      contractors.
+    </p>
+    <p class="version">Legal version {{ version }} (draft for counsel review)</p>
 
-  <ion-list>
-    <ion-item>
-      <ion-checkbox [(ngModel)]="age18" labelPlacement="end" justify="start">
-        I am 18 or over
-      </ion-checkbox>
-    </ion-item>
-    <ion-item>
-      <ion-checkbox [(ngModel)]="terms" labelPlacement="end" justify="start">
-        I have read the Terms of Service
-      </ion-checkbox>
-    </ion-item>
-    <ion-item>
-      <ion-checkbox [(ngModel)]="privacy" labelPlacement="end" justify="start">
-        I have read the Privacy Notice
-      </ion-checkbox>
-    </ion-item>
-  </ion-list>
+    <div class="doc-links">
+      <a routerLink="/legal/terms" (click)="markRead('terms')">Terms of Service</a>
+      <a routerLink="/legal/privacy" (click)="markRead('privacy')">Privacy Notice</a>
+      <a routerLink="/legal/notice" (click)="markRead('notice')">ECTA Notice</a>
+    </div>
 
-  <p class="error" *ngIf="error">{{ error }}</p>
+    <p class="scroll-hint" *ngIf="!scrolled">Scroll this screen, then confirm below.</p>
 
-  <ion-button expand="block" [disabled]="!canAccept || loading" (click)="accept()">
-    <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-    {{ loading ? 'Saving…' : 'Accept and enter' }}
-  </ion-button>
+    <ion-list class="checks">
+      <ion-item lines="none">
+        <ion-checkbox [(ngModel)]="age18" labelPlacement="end" justify="start" (ionChange)="onCheck()">
+          I am 18 or over
+        </ion-checkbox>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-checkbox [(ngModel)]="terms" labelPlacement="end" justify="start" (ionChange)="onCheck()">
+          I have read the Terms of Service
+        </ion-checkbox>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-checkbox [(ngModel)]="privacy" labelPlacement="end" justify="start" (ionChange)="onCheck()">
+          I have read the Privacy Notice
+        </ion-checkbox>
+      </ion-item>
+    </ion-list>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+
+    <ion-button
+      expand="block"
+      class="accept"
+      [disabled]="!canAccept || loading"
+      (click)="accept()"
+    >
+      {{ loading ? 'Saving…' : 'Accept and enter' }}
+    </ion-button>
+  </section>
 </ion-content>

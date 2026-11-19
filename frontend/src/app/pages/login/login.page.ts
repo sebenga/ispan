@@ -3,20 +3,17 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
+  IonBadge,
   IonButton,
   IonContent,
-  IonHeader,
-  IonIcon,
   IonInput,
   IonItem,
   IonList,
-  IonTitle,
-  IonToolbar,
-  IonBadge,
 } from '@ionic/angular/standalone';
 
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth.service';
+import { SoundService } from '../../core/sound.service';
 
 @Component({
   selector: 'app-login',
@@ -25,15 +22,11 @@ import { AuthService } from '../../core/auth.service';
     CommonModule,
     FormsModule,
     RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
     IonList,
     IonItem,
     IonInput,
     IonButton,
-    IonIcon,
     IonBadge,
   ],
   templateUrl: './login.page.html',
@@ -49,14 +42,31 @@ export class LoginPage {
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
+    private readonly sound: SoundService,
   ) {}
 
+  unlockAudio() {
+    this.sound.unlock();
+  }
+
+  tap() {
+    this.sound.tap();
+  }
+
   submit() {
+    const email = this.email.trim();
+    const password = this.password;
+    if (!email || !password) {
+      this.error = 'Enter email and password.';
+      return;
+    }
     this.loading = true;
     this.error = '';
-    this.auth.login(this.email, this.password).subscribe({
+    this.sound.tap();
+    this.auth.login(email, password).subscribe({
       next: (res) => {
         this.loading = false;
+        this.sound.success();
         const u = res.user;
         if (u.is_support || u.role === 'ADMIN') {
           void this.router.navigateByUrl('/admin/verification');
@@ -68,7 +78,13 @@ export class LoginPage {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err?.error?.detail || 'Login failed';
+        const detail = err?.error?.detail;
+        this.error =
+          typeof detail === 'string'
+            ? detail
+            : err?.status === 0
+              ? 'Cannot reach the API (is it running on port 8001?)'
+              : 'No active account found with the given credentials';
       },
     });
   }

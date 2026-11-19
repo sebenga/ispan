@@ -1,26 +1,49 @@
-<ion-header>
-  <ion-toolbar color="dark">
-    <ion-title>Hi, {{ name }}</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="logout()">Log out</ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="portal-content">
+  <div class="hero">
+    <img src="assets/brand/customer-home.jpg" alt="Help arriving at a Cape Town home" />
+    <div class="hero-fade"></div>
+    <div class="hero-top">
+      <p class="brand-mark">iSpan</p>
+      <button type="button" class="ghost-btn" (click)="logout()">Log out</button>
+    </div>
+    <div class="hero-copy">
+      <p class="eyebrow">Customer</p>
+      <h1>Hi, {{ name }}</h1>
+      <p class="lede">Book verified trades across Cape Town — cleaners, electricians, plumbers and more.</p>
+    </div>
+  </div>
 
-<ion-content class="ion-padding">
-  <ion-button expand="block" routerLink="/customer/new">Post a job</ion-button>
+  <div class="panel">
+    <ion-button expand="block" class="primary" routerLink="/customer/new" (click)="tap()">
+      Post a job
+    </ion-button>
 
-  <ion-list *ngIf="jobs.length; else empty">
-    <ion-item *ngFor="let job of jobs" [routerLink]="['/customer/jobs', job.id]" detail>
-      <ion-label>
-        <h2>{{ job.title }}</h2>
-        <p>{{ job.category?.name }} · {{ job.suburb }} · {{ zar(job.budget_cents) }}</p>
-      </ion-label>
-      <ion-badge slot="end" color="medium">{{ job.status }}</ion-badge>
-    </ion-item>
-  </ion-list>
+    <div class="section-head">
+      <h2>Your jobs</h2>
+      <p *ngIf="jobs.length" class="count">{{ jobs.length }} open</p>
+    </div>
 
-  <ng-template #empty>
-    <p class="muted">No jobs yet. Post your first request.</p>
-  </ng-template>
+    <ion-list *ngIf="jobs.length; else empty" class="jobs" lines="none">
+      <ion-item
+        *ngFor="let job of jobs; let i = index"
+        class="job"
+        [style.animation-delay.ms]="80 * i"
+        [routerLink]="['/customer/jobs', job.id]"
+        detail
+        (click)="tap()"
+      >
+        <ion-label>
+          <h3>{{ job.title }}</h3>
+          <p>{{ job.category?.name }} · {{ job.suburb }} · {{ zar(job.budget_cents) }}</p>
+        </ion-label>
+        <ion-badge slot="end" color="warning">{{ job.status }}</ion-badge>
+      </ion-item>
+    </ion-list>
+
+    <ng-template #empty>
+      <div class="empty">
+        <p>No jobs yet. Post your first request and watch offers come in.</p>
+      </div>
+    </ng-template>
+  </div>
 </ion-content>

@@ -4,18 +4,15 @@ import { Router, RouterLink } from '@angular/router';
 import {
   IonBadge,
   IonButton,
-  IonButtons,
   IonContent,
-  IonHeader,
   IonItem,
   IonLabel,
   IonList,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { SoundService } from '../../core/sound.service';
 
 @Component({
   selector: 'app-worker',
@@ -23,11 +20,7 @@ import { AuthService } from '../../core/auth.service';
   imports: [
     CommonModule,
     RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
-    IonButtons,
     IonButton,
     IonList,
     IonItem,
@@ -47,6 +40,7 @@ export class WorkerPage implements OnInit {
     private readonly api: ApiService,
     private readonly auth: AuthService,
     private readonly router: Router,
+    private readonly sound: SoundService,
   ) {}
 
   ngOnInit() {
@@ -56,6 +50,7 @@ export class WorkerPage implements OnInit {
       return;
     }
     this.name = user.first_name;
+    this.sound.unlock();
     this.reload();
   }
 
@@ -76,10 +71,16 @@ export class WorkerPage implements OnInit {
     return `R${(cents / 100).toFixed(0)}`;
   }
 
+  tap() {
+    this.sound.tap();
+  }
+
   acceptOffer(offer: any) {
     this.error = '';
+    this.sound.tap();
     this.api.acceptOffer(offer.job.id, offer.id).subscribe({
       next: (job) => {
+        this.sound.success();
         void this.router.navigateByUrl(`/worker/jobs/${job.id}`);
       },
       error: (err) => {
@@ -90,6 +91,7 @@ export class WorkerPage implements OnInit {
   }
 
   declineOffer(offer: any) {
+    this.sound.tap();
     this.api.declineOffer(offer.job.id, offer.id).subscribe({
       next: () => this.reload(),
       error: (err) => (this.error = err?.error?.detail || 'Decline failed'),
@@ -97,6 +99,7 @@ export class WorkerPage implements OnInit {
   }
 
   logout() {
+    this.sound.tap();
     this.auth.logout();
   }
 }

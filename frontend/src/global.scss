@@ -9,6 +9,8 @@
  * https://ionicframework.com/docs/layout/global-stylesheets
  */
 
+@import "./theme/variables.scss";
+
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
 
@@ -37,3 +39,16 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 /* @import "@ionic/angular/css/palettes/dark.system.css"; */
+
+body {
+  font-family: var(--ion-font-family);
+  background: var(--ispan-sand);
+  color: var(--ispan-ink);
+}
+
+h1,
+h2,
+.brand,
+.brand-mark {
+  font-family: var(--ispan-display);
+}

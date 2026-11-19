@@ -9,6 +9,11 @@ User = get_user_model()
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        # Case-insensitive email login (USERNAME_FIELD lookups are exact-match).
+        raw = attrs.get(self.username_field)
+        if isinstance(raw, str):
+            attrs[self.username_field] = raw.strip().lower()
+
         data = super().validate(attrs)
         if self.user.is_suspended:
             raise serializers.ValidationError("Account suspended.")
