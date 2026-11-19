@@ -1,0 +1,46 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/customer"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Post a job</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <p class="muted">Escrow holds payment until you confirm the work is done.</p>
+
+  <ion-list>
+    <ion-item>
+      <ion-select label="Service" labelPlacement="stacked" [(ngModel)]="category_id" (ionChange)="onCategoryChange()">
+        <ion-select-option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Title" labelPlacement="stacked" [(ngModel)]="title"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-textarea label="Details" labelPlacement="stacked" [(ngModel)]="description" rows="4"></ion-textarea>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Street address" labelPlacement="stacked" [(ngModel)]="address_line"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Suburb" labelPlacement="stacked" [(ngModel)]="suburb"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-select label="Payment" labelPlacement="stacked" [(ngModel)]="payment_method">
+        <ion-select-option value="ESCROW">Digital escrow</ion-select-option>
+        <ion-select-option value="CASH">Cash on completion</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Budget (ZAR)" labelPlacement="stacked" type="number" [(ngModel)]="budget_rand"></ion-input>
+    </ion-item>
+  </ion-list>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <ion-button expand="block" (click)="submit()" [disabled]="loading">
+    {{ loading ? 'Posting…' : 'Post job' }}
+  </ion-button>
+</ion-content>

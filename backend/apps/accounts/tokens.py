@@ -1,0 +1,23 @@
+from __future__ import annotations
+
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+User = get_user_model()
+
+
+class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        if self.user.is_suspended:
+            raise serializers.ValidationError("Account suspended.")
+        data["user"] = {
+            "id": str(self.user.id),
+            "email": self.user.email,
+            "phone": self.user.phone,
+            "role": self.user.role,
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name,
+        }
+        return data

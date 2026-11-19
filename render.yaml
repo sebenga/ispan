@@ -1,0 +1,118 @@
+# iSpan — Render Blueprint (Frankfurt)
+# Free tier is acceptable for the MVP (cold starts and Postgres limits apply).
+
+envVarGroups:
+  - name: ispan-secrets
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: JWT_SIGNING_KEY
+        generateValue: true
+      - key: INTERNAL_API_TOKEN
+        generateValue: true
+      - key: PAYMENTS_WEBHOOK_SECRET
+        generateValue: true
+
+databases:
+  - name: ispan-db
+    plan: free
+    region: frankfurt
+    databaseName: ispan
+    user: ispan
+
+services:
+  - type: keyvalue
+    name: ispan-kv
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: ispan-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    envVars:
+      - fromGroup: ispan-secrets
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ispan-api.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://ispan-web.onrender.com
+      - key: PUBLIC_APP_ORIGIN
+        value: https://ispan-web.onrender.com
+      - key: PUBLIC_API_ORIGIN
+        value: https://ispan-api.onrender.com
+      - key: LEGAL_VERSION
+        value: "2026-11-19"
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: KYC_PROVIDER
+        value: mock
+      - key: SMS_PROVIDER
+        value: mock
+      - key: FEATURE_PARTNER_OFFERS
+        value: "false"
+      - key: SECURE_SSL_REDIRECT
+        value: "false"
+      - key: SPA_DIR
+        value: /app/spa
+      - key: SEED_ON_BOOT
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ispan-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: ispan-kv
+          type: keyvalue
+          property: connectionString
+
+  - type: web
+    name: ispan-realtime
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: realtime
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - fromGroup: ispan-secrets
+      - key: REDIS_URL
+        fromService:
+          name: ispan-kv
+          type: keyvalue
+          property: connectionString
+      - key: REALTIME_EVENT_CHANNEL
+        value: ispan:events
+      - key: REALTIME_CORS_ORIGINS
+        value: https://ispan-web.onrender.com
+
+  - type: web
+    name: ispan-worker
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerCommand: python -c "import time; print('worker placeholder — Celery/RQ in later phase'); time.sleep(3600)"
+    envVars:
+      - fromGroup: ispan-secrets
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ispan-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: ispan-kv
+          type: keyvalue
+          property: connectionString

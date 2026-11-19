@@ -1,0 +1,78 @@
+name: ispan
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ispan
+      POSTGRES_USER: ispan
+      POSTGRES_PASSWORD: ispan
+    ports:
+      - '5433:5432'
+    volumes:
+      - ispan_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ispan -d ispan']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    ports:
+      - '6380:6379'
+    volumes:
+      - ispan_kv:/data
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # Optional full-stack containers for parity with Render (not required for `make dev`)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ['full']
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DJANGO_SECRET_KEY: local-compose-secret-key-change-me
+      JWT_SIGNING_KEY: local-compose-jwt-signing-key-32b
+      DATABASE_URL: postgres://ispan:ispan@postgres:5432/ispan
+      REDIS_URL: redis://valkey:6379/0
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,api
+      CORS_ALLOWED_ORIGINS: http://localhost:8100
+      PUBLIC_APP_ORIGIN: http://localhost:8100
+      PUBLIC_API_ORIGIN: http://localhost:8000
+      PAYMENT_PROVIDER: mock
+      LEGAL_VERSION: '2026-11-19'
+      SECURE_SSL_REDIRECT: 'false'
+      SPA_DIR: /app/spa
+    ports:
+      - '8000:8000'
+
+  realtime:
+    build:
+      context: ./realtime
+    profiles: ['full']
+    depends_on:
+      valkey:
+        condition: service_healthy
+    environment:
+      JWT_SIGNING_KEY: local-compose-jwt-signing-key-32b
+      REDIS_URL: redis://valkey:6379/0
+      REALTIME_EVENT_CHANNEL: ispan:events
+      REALTIME_CORS_ORIGINS: http://localhost:8100
+      PORT: '4000'
+    ports:
+      - '4000:4000'
+
+volumes:
+  ispan_pg:
+  ispan_kv:

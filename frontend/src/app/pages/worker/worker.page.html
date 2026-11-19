@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>{{ name }}'s board</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()">Log out</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h2>Open jobs</h2>
+  <ion-list>
+    <ion-item *ngFor="let job of openJobs">
+      <ion-label>
+        <h2>{{ job.title }}</h2>
+        <p>{{ job.category?.name }} · {{ job.suburb }} · {{ zar(job.budget_cents) }}</p>
+      </ion-label>
+      <ion-button slot="end" (click)="accept(job.id)">Accept</ion-button>
+    </ion-item>
+  </ion-list>
+
+  <h2>Your jobs</h2>
+  <ion-list>
+    <ion-item *ngFor="let job of myJobs" [routerLink]="['/worker/jobs', job.id]" detail>
+      <ion-label>
+        <h2>{{ job.title }}</h2>
+        <p>{{ zar(job.agreed_price_cents || job.budget_cents) }}</p>
+      </ion-label>
+      <ion-badge slot="end">{{ job.status }}</ion-badge>
+    </ion-item>
+  </ion-list>
+</ion-content>

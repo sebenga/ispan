@@ -1,0 +1,66 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="role === 'WORKER' ? '/worker' : '/customer'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ job?.title || 'Job' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" *ngIf="job">
+  <ion-badge color="medium">{{ job.status }}</ion-badge>
+  <p>{{ job.description }}</p>
+
+  <ion-list>
+    <ion-item>
+      <ion-label>
+        <p>Budget</p>
+        <h2>{{ zar(job.budget_cents) }}</h2>
+      </ion-label>
+    </ion-item>
+    <ion-item>
+      <ion-label>
+        <p>Payment</p>
+        <h2>{{ job.payment_method }} · {{ job.payment?.status }}</h2>
+      </ion-label>
+    </ion-item>
+    <ion-item>
+      <ion-label>
+        <p>Location</p>
+        <h2>{{ job.address_line }}, {{ job.suburb }}</h2>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="role === 'WORKER' && job.status === 'OPEN'">
+    <ion-button expand="block" (click)="accept()">Accept job</ion-button>
+  </div>
+
+  <div *ngIf="role === 'WORKER'">
+    <ion-button
+      *ngFor="let a of workerActions()"
+      expand="block"
+      (click)="setStatus(a.status)"
+    >
+      {{ a.label }}
+    </ion-button>
+  </div>
+
+  <div *ngIf="role === 'CUSTOMER' && job.status === 'AWAITING_CONFIRMATION'">
+    <ion-button expand="block" color="success" (click)="setStatus('COMPLETED')">
+      Confirm & release payment
+    </ion-button>
+  </div>
+
+  <ion-button
+    *ngIf="job.status !== 'COMPLETED' && job.status !== 'CANCELLED'"
+    expand="block"
+    color="danger"
+    fill="outline"
+    (click)="setStatus('CANCELLED')"
+  >
+    Cancel job
+  </ion-button>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+</ion-content>

@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Hi, {{ name }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()">Log out</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-button expand="block" routerLink="/customer/new">Post a job</ion-button>
+
+  <ion-list *ngIf="jobs.length; else empty">
+    <ion-item *ngFor="let job of jobs" [routerLink]="['/customer/jobs', job.id]" detail>
+      <ion-label>
+        <h2>{{ job.title }}</h2>
+        <p>{{ job.category?.name }} · {{ job.suburb }} · {{ zar(job.budget_cents) }}</p>
+      </ion-label>
+      <ion-badge slot="end" color="medium">{{ job.status }}</ion-badge>
+    </ion-item>
+  </ion-list>
+
+  <ng-template #empty>
+    <p class="muted">No jobs yet. Post your first request.</p>
+  </ng-template>
+</ion-content>

@@ -1,0 +1,30 @@
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.lede {
+  color: var(--ion-color-medium-shade);
+  line-height: 1.45;
+}
+
+.links {
+  margin: 1rem 0;
+}
+
+.banner {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.scroll-hint {
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+}
+
+.error {
+  color: var(--ion-color-danger);
+}

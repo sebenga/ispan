@@ -1,0 +1,65 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>
+      <ion-icon name="shield-checkmark-outline"></ion-icon>
+      iSpan
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" (ionScroll)="onScroll($event)" [scrollEvents]="true">
+  <div class="banner" *ngIf="paymentTestMode">
+    <ion-badge color="warning">Test mode</ion-badge>
+    Mock payments and notifications are active.
+  </div>
+
+  <h1>Before you continue</h1>
+  <p class="lede">
+    Please read our legal notices. Workers on iSpan are independent contractors, not employees of
+    iSpan.
+  </p>
+
+  <ion-note color="medium">Legal version {{ version }} (draft for counsel review)</ion-note>
+
+  <ion-list lines="none" class="links">
+    <ion-item button routerLink="/legal/terms" detail (click)="scrolled = true">
+      <ion-icon name="document-text-outline" slot="start"></ion-icon>
+      <ion-label>Terms of Service</ion-label>
+    </ion-item>
+    <ion-item button routerLink="/legal/privacy" detail (click)="scrolled = true">
+      <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+      <ion-label>Privacy Notice</ion-label>
+    </ion-item>
+    <ion-item button routerLink="/legal/notice" detail (click)="scrolled = true">
+      <ion-icon name="home-outline" slot="start"></ion-icon>
+      <ion-label>ECTA Notice</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <p class="scroll-hint" *ngIf="!scrolled">Scroll this screen, then confirm below.</p>
+
+  <ion-list>
+    <ion-item>
+      <ion-checkbox [(ngModel)]="age18" labelPlacement="end" justify="start">
+        I am 18 or over
+      </ion-checkbox>
+    </ion-item>
+    <ion-item>
+      <ion-checkbox [(ngModel)]="terms" labelPlacement="end" justify="start">
+        I have read the Terms of Service
+      </ion-checkbox>
+    </ion-item>
+    <ion-item>
+      <ion-checkbox [(ngModel)]="privacy" labelPlacement="end" justify="start">
+        I have read the Privacy Notice
+      </ion-checkbox>
+    </ion-item>
+  </ion-list>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <ion-button expand="block" [disabled]="!canAccept || loading" (click)="accept()">
+    <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+    {{ loading ? 'Saving…' : 'Accept and enter' }}
+  </ion-button>
+</ion-content>
