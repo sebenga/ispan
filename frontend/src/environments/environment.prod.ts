@@ -3,7 +3,7 @@ export const environment = {
   apiBaseUrl: '/api/v1',
   legalApiBaseUrl: '/api',
   /** Socket.IO service on Render (same Blueprint). */
-  realtimeUrl: 'https://ispan-realtime.onrender.com',
+  realtimeUrl: 'https://ispan-realtime-2oct.onrender.com',
   legalVersion: '2026-11-19',
   paymentTestMode: true,
   supportedLanguages: ['en', 'xh', 'af', 'zu'] as const,

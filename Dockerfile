@@ -2,7 +2,7 @@
 FROM node:22-bookworm-slim AS frontend
 WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY frontend/ ./
 ENV NODE_ENV=production
 RUN npx ng build --configuration production
