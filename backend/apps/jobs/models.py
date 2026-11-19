@@ -9,15 +9,22 @@ from apps.core.models import BaseModel, UUIDModel
 
 class Job(BaseModel):
     class Status(models.TextChoices):
-        OPEN = "OPEN", "Open"
-        MATCHED = "MATCHED", "Matched"
+        REQUESTED = "REQUESTED", "Requested"
+        OFFERED = "OFFERED", "Offered"
+        QUOTED = "QUOTED", "Quoted"
         ACCEPTED = "ACCEPTED", "Accepted"
         EN_ROUTE = "EN_ROUTE", "En route"
+        ARRIVED = "ARRIVED", "Arrived"
         IN_PROGRESS = "IN_PROGRESS", "In progress"
-        AWAITING_CONFIRMATION = "AWAITING_CONFIRMATION", "Awaiting confirmation"
         COMPLETED = "COMPLETED", "Completed"
+        CONFIRMED = "CONFIRMED", "Confirmed"
         CANCELLED = "CANCELLED", "Cancelled"
+        EXPIRED = "EXPIRED", "Expired"
         DISPUTED = "DISPUTED", "Disputed"
+
+    class Mode(models.TextChoices):
+        INSTANT = "instant", "Instant"
+        SCHEDULED = "scheduled", "Scheduled"
 
     class PaymentMethod(models.TextChoices):
         ESCROW = "ESCROW", "Digital escrow"
@@ -36,19 +43,36 @@ class Job(BaseModel):
     category = models.ForeignKey(ServiceCategory, on_delete=models.PROTECT, related_name="jobs")
     title = models.CharField(max_length=160)
     description = models.TextField()
-    status = models.CharField(max_length=32, choices=Status.choices, default=Status.OPEN, db_index=True)
+    status = models.CharField(
+        max_length=32, choices=Status.choices, default=Status.REQUESTED, db_index=True
+    )
+    mode = models.CharField(max_length=16, choices=Mode.choices, default=Mode.INSTANT)
     payment_method = models.CharField(max_length=16, choices=PaymentMethod.choices)
-    budget_cents = models.PositiveIntegerField()
+    currency = models.CharField(max_length=3, default="ZAR")
+    budget_cents = models.PositiveIntegerField(null=True, blank=True)
     agreed_price_cents = models.PositiveIntegerField(null=True, blank=True)
     commission_bps = models.PositiveIntegerField(default=1250)
+    # Cancellation policy snapshot at booking (catalogue changes must not rewrite history).
+    cancel_fee_bps = models.PositiveIntegerField(default=5000)
+    cancel_window_minutes = models.PositiveIntegerField(default=120)
+    cancellation_policy_text = models.TextField(blank=True)
     scheduled_at = models.DateTimeField(null=True, blank=True)
-    is_immediate = models.BooleanField(default=True)
+    is_immediate = models.BooleanField(default=True)  # legacy alias of mode=instant
     address_line = models.CharField(max_length=255)
     suburb = models.CharField(max_length=120)
     city = models.CharField(max_length=80, default="Cape Town")
+    region = models.CharField(max_length=80, default="Western Cape")
     lat = models.FloatField(null=True, blank=True)
     lng = models.FloatField(null=True, blank=True)
-    cancel_fee_bps = models.PositiveIntegerField(default=5000)
+    women_preferred = models.BooleanField(default=False)
+    accept_cancellation_policy = models.BooleanField(default=False)
+    # Matching state
+    match_radius_km = models.FloatField(default=5)
+    match_round = models.PositiveSmallIntegerField(default=0)
+    last_match_at = models.DateTimeField(null=True, blank=True)
+    # PINs hashed; plaintext returned once via API to the customer.
+    start_pin_hash = models.CharField(max_length=128, blank=True)
+    finish_pin_hash = models.CharField(max_length=128, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
     cancelled_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -57,14 +81,81 @@ class Job(BaseModel):
         blank=True,
         related_name="cancelled_jobs",
     )
+    cancellation_fee_cents = models.PositiveIntegerField(null=True, blank=True)
+    cancellation_snapshot = models.JSONField(default=dict, blank=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
         return f"{self.title} [{self.status}]"
+
+
+class JobOffer(BaseModel):
+    class Status(models.TextChoices):
+        NOTIFIED = "notified", "Notified"
+        SEEN = "seen", "Seen"
+        ACCEPTED = "accepted", "Accepted"
+        DECLINED = "declined", "Declined"
+        EXPIRED = "expired", "Expired"
+        LOST_RACE = "lost_race", "Lost race"
+
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="offers")
+    worker = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="job_offers"
+    )
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NOTIFIED)
+    distance_km = models.FloatField(null=True, blank=True)
+    notified_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    seen_at = models.DateTimeField(null=True, blank=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-notified_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job", "worker"],
+                condition=models.Q(status__in=["notified", "seen"]),
+                name="uniq_active_offer_per_worker",
+            ),
+        ]
+
+
+class Quote(BaseModel):
+    class Status(models.TextChoices):
+        PROPOSED = "proposed", "Proposed"
+        ACCEPTED = "accepted", "Accepted"
+        REJECTED = "rejected", "Rejected"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="quotes")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    amount_cents = models.PositiveIntegerField()
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PROPOSED)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class JobEvent(UUIDModel):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="events")
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    event_type = models.CharField(max_length=40)
+    from_status = models.CharField(max_length=32, blank=True)
+    to_status = models.CharField(max_length=32, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
 
 
 class JobTracking(UUIDModel):

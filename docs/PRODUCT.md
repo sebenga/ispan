@@ -34,3 +34,6 @@ Standalone “Uber for labour” marketplace. Launch city: **Cape Town**, with c
 
 - Phase 0 uses SQLite when `DATABASE_URL` is empty for fastest local boot; Compose Postgres is preferred for parity.
 - Ionicons are registered via `addIcons` in `app.component.ts`.
+- Phase 2 matching is server-side (haversine + bounding box). Accept race uses `select_for_update`; losers get `409` / `lost_race`.
+- Cancellation fees use the policy snapshotted on the job at booking; settlement lands in Phase 4.
+- Declining an offer never creates a strike.

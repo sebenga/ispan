@@ -38,7 +38,12 @@ Open **http://localhost:8100/** — you should see the **legal consent gate**, t
 | Role | Email | Password |
 |---|---|---|
 | Customer | `customer@ispan.test` | `password123` |
-| Worker | `worker@ispan.test` | `password123` |
+| Electrician (verified + CoC) | `worker@ispan.test` | `password123` |
+| Cleaner | `cleaner@ispan.test` | `password123` |
+| Cleaner 2 (race tests) | `cleaner2@ispan.test` | `password123` |
+| Plumber (no PIRB) | `plumber@ispan.test` | `password123` |
+| Plumber (PIRB) | `plumber_certified@ispan.test` | `password123` |
+| Admin | `admin@ispan.test` | `password123` |
 
 ## Tests
 
@@ -61,4 +66,8 @@ Use the Blueprint in `render.yaml` (New → Blueprint). Free-tier limits are doc
 
 ## Phases
 
-This repo follows the phased build plan in the product brief. **Phase 0** = scaffold, legal gate, health checks, Blueprint, docs.
+This repo follows the phased build plan in the product brief.
+
+- **Phase 0** — scaffold, legal gate, health checks, Blueprint, docs
+- **Phase 1** — registration, mock OTP, JWT, dual profiles, verification queue
+- **Phase 2** — category tree, jobs, matching (offers/race/radius), quotes, cancellation snapshots

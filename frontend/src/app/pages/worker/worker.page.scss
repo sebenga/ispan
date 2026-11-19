@@ -3,7 +3,18 @@ h2 {
   margin-top: 1.25rem;
 }
 
-.verify-hint {
+.verify-hint,
+.muted {
   color: var(--ion-color-medium);
   font-size: 0.9rem;
+}
+
+.offer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.error {
+  color: var(--ion-color-danger);
 }

@@ -42,6 +42,14 @@ export class ApiService {
     });
   }
 
+  cancelJob(id: string, preview = false) {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${id}/cancel/`,
+      preview ? { preview: true } : {},
+      { headers: this.headers() },
+    );
+  }
+
   acceptJob(id: string) {
     return this.http.post<any>(
       `${environment.apiBaseUrl}/jobs/${id}/accept/`,
@@ -50,10 +58,56 @@ export class ApiService {
     );
   }
 
-  updateJobStatus(id: string, status: string) {
+  acceptOffer(jobId: string, offerId: string) {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/offers/${offerId}/accept/`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
+  declineOffer(jobId: string, offerId: string) {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/offers/${offerId}/decline/`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
+  myOffers() {
+    return this.http.get<{ results: any[] }>(`${environment.apiBaseUrl}/jobs/offers/mine/`, {
+      headers: this.headers(),
+    });
+  }
+
+  tickMatch(jobId: string) {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/match/tick/`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
+  createQuote(jobId: string, amount_cents: number, message = '') {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/quotes/`,
+      { amount_cents, message },
+      { headers: this.headers() },
+    );
+  }
+
+  acceptQuote(jobId: string, quoteId: string) {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/quotes/${quoteId}/accept/`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
+  updateJobStatus(id: string, status: string, pin?: string) {
     return this.http.post<any>(
       `${environment.apiBaseUrl}/jobs/${id}/status/`,
-      { status },
+      { status, pin },
       { headers: this.headers() },
     );
   }

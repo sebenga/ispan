@@ -8,19 +8,45 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <p class="muted">Escrow holds payment until you confirm the work is done.</p>
+  <p class="muted">Suggested rates are guidance only — workers set their own prices.</p>
 
   <ion-list>
     <ion-item>
-      <ion-select label="Service" labelPlacement="stacked" [(ngModel)]="category_id" (ionChange)="onCategoryChange()">
-        <ion-select-option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</ion-select-option>
+      <ion-select
+        label="Service"
+        labelPlacement="stacked"
+        [(ngModel)]="category_id"
+        (ionChange)="onCategoryChange()"
+      >
+        <ion-select-option *ngFor="let c of flatCategories" [value]="c.id">
+          {{ c.name }}
+        </ion-select-option>
       </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select label="When" labelPlacement="stacked" [(ngModel)]="mode">
+        <ion-select-option value="instant">Need someone now</ion-select-option>
+        <ion-select-option value="scheduled">Schedule / request quotes</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item *ngIf="mode === 'scheduled'">
+      <ion-input
+        label="Scheduled start"
+        labelPlacement="stacked"
+        type="datetime-local"
+        [(ngModel)]="scheduled_at"
+      ></ion-input>
     </ion-item>
     <ion-item>
       <ion-input label="Title" labelPlacement="stacked" [(ngModel)]="title"></ion-input>
     </ion-item>
     <ion-item>
-      <ion-textarea label="Details" labelPlacement="stacked" [(ngModel)]="description" rows="4"></ion-textarea>
+      <ion-textarea
+        label="Details"
+        labelPlacement="stacked"
+        [(ngModel)]="description"
+        rows="4"
+      ></ion-textarea>
     </ion-item>
     <ion-item>
       <ion-input label="Street address" labelPlacement="stacked" [(ngModel)]="address_line"></ion-input>
@@ -35,12 +61,32 @@
       </ion-select>
     </ion-item>
     <ion-item>
-      <ion-input label="Budget (ZAR)" labelPlacement="stacked" type="number" [(ngModel)]="budget_rand"></ion-input>
+      <ion-input
+        label="Budget (ZAR)"
+        labelPlacement="stacked"
+        type="number"
+        [(ngModel)]="budget_rand"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-checkbox labelPlacement="end" [(ngModel)]="women_preferred">
+        Prefer workers who opted into women-preferred matching
+      </ion-checkbox>
     </ion-item>
   </ion-list>
 
+  <div class="policy" *ngIf="policyText">
+    <h3>Cancellation policy</h3>
+    <p>{{ policyText }}</p>
+    <ion-item lines="none">
+      <ion-checkbox labelPlacement="end" [(ngModel)]="accept_cancellation_policy">
+        I understand and accept this cancellation policy
+      </ion-checkbox>
+    </ion-item>
+  </div>
+
   <p class="error" *ngIf="error">{{ error }}</p>
   <ion-button expand="block" (click)="submit()" [disabled]="loading">
-    {{ loading ? 'Posting…' : 'Post job' }}
+    {{ loading ? 'Posting…' : mode === 'instant' ? 'Find a worker' : 'Post for quotes' }}
   </ion-button>
 </ion-content>

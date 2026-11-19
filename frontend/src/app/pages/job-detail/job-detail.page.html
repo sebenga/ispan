@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar color="dark">
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="role === 'WORKER' ? '/worker' : '/customer'"></ion-back-button>
+      <ion-back-button [defaultHref]="isWorker ? '/worker' : '/customer'"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ job?.title || 'Job' }}</ion-title>
   </ion-toolbar>
@@ -11,17 +11,25 @@
   <ion-badge color="medium">{{ job.status }}</ion-badge>
   <p>{{ job.description }}</p>
 
+  <div class="looking" *ngIf="looking()">
+    <h2>Looking for a worker…</h2>
+    <p>
+      Searching within {{ job.match_radius_km }} km (round {{ job.match_round }}). The radius widens
+      automatically if no one accepts.
+    </p>
+  </div>
+
   <ion-list>
     <ion-item>
       <ion-label>
-        <p>Budget</p>
-        <h2>{{ zar(job.budget_cents) }}</h2>
+        <p>Budget / agreed</p>
+        <h2>{{ zar(job.agreed_price_cents || job.budget_cents) }}</h2>
       </ion-label>
     </ion-item>
     <ion-item>
       <ion-label>
         <p>Payment</p>
-        <h2>{{ job.payment_method }} · {{ job.payment?.status }}</h2>
+        <h2>{{ job.payment_method }}</h2>
       </ion-label>
     </ion-item>
     <ion-item>
@@ -30,37 +38,89 @@
         <h2>{{ job.address_line }}, {{ job.suburb }}</h2>
       </ion-label>
     </ion-item>
+    <ion-item *ngIf="job.worker">
+      <ion-label>
+        <p>Worker</p>
+        <h2>{{ job.worker.first_name }} {{ job.worker.last_name }}</h2>
+      </ion-label>
+    </ion-item>
   </ion-list>
 
-  <div *ngIf="role === 'WORKER' && job.status === 'OPEN'">
-    <ion-button expand="block" (click)="accept()">Accept job</ion-button>
+  <div *ngIf="isCustomer && pins">
+    <h3>Your PINs (keep private)</h3>
+    <p>Start: <strong>{{ pins.start_pin }}</strong> · Finish: <strong>{{ pins.finish_pin }}</strong></p>
   </div>
 
-  <div *ngIf="role === 'WORKER'">
+  <div *ngIf="isCustomer && job.quotes?.length">
+    <h3>Quotes</h3>
+    <ion-list>
+      <ion-item *ngFor="let q of job.quotes">
+        <ion-label>
+          <h2>{{ zar(q.amount_cents) }} · {{ q.status }}</h2>
+          <p>{{ q.actor?.first_name }} — {{ q.message }}</p>
+        </ion-label>
+        <ion-button
+          *ngIf="q.status === 'proposed'"
+          slot="end"
+          (click)="acceptQuote(q.id)"
+        >
+          Accept
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <div *ngIf="isWorker && (job.status === 'REQUESTED' || job.status === 'QUOTED' || job.status === 'OFFERED')">
+    <h3>Send a quote</h3>
+    <ion-list>
+      <ion-item>
+        <ion-input label="Amount (ZAR)" labelPlacement="stacked" type="number" [(ngModel)]="quoteAmount"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Message" labelPlacement="stacked" [(ngModel)]="quoteMessage"></ion-input>
+      </ion-item>
+    </ion-list>
+    <ion-button expand="block" fill="outline" (click)="submitQuote()">Submit quote</ion-button>
     <ion-button
-      *ngFor="let a of workerActions()"
+      *ngIf="job.status === 'OFFERED' || job.status === 'REQUESTED'"
       expand="block"
-      (click)="setStatus(a.status)"
+      (click)="accept()"
     >
+      Accept at budget
+    </ion-button>
+  </div>
+
+  <div *ngIf="isWorker">
+    <ion-button *ngFor="let a of workerActions()" expand="block" (click)="setStatus(a.status)">
       {{ a.label }}
     </ion-button>
   </div>
 
-  <div *ngIf="role === 'CUSTOMER' && job.status === 'AWAITING_CONFIRMATION'">
-    <ion-button expand="block" color="success" (click)="setStatus('COMPLETED')">
-      Confirm & release payment
+  <div *ngIf="isCustomer && job.status === 'COMPLETED'">
+    <ion-button expand="block" color="success" (click)="setStatus('CONFIRMED')">
+      Confirm completion
     </ion-button>
   </div>
 
   <ion-button
-    *ngIf="job.status !== 'COMPLETED' && job.status !== 'CANCELLED'"
+    *ngIf="job.status !== 'CONFIRMED' && job.status !== 'CANCELLED' && job.status !== 'EXPIRED'"
     expand="block"
     color="danger"
     fill="outline"
-    (click)="setStatus('CANCELLED')"
+    (click)="previewCancel()"
   >
     Cancel job
   </ion-button>
+
+  <div class="cancel-box" *ngIf="cancelPreview">
+    <p *ngIf="!cancelPreview.is_late">Cancellation is free at this stage.</p>
+    <p *ngIf="cancelPreview.is_late">
+      Late fee {{ zar(cancelPreview.fee_cents) }}
+      ({{ cancelPreview.cancelled_by }}). Escrow refund estimate:
+      {{ zar(cancelPreview.escrow_refund_cents) }}.
+    </p>
+    <ion-button expand="block" color="danger" (click)="confirmCancel()">Confirm cancel</ion-button>
+  </div>
 
   <p class="error" *ngIf="error">{{ error }}</p>
 </ion-content>

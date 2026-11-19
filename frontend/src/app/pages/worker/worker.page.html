@@ -14,14 +14,23 @@
     <a routerLink="/worker/onboarding">worker verification</a>
     before payouts and restricted matches.
   </p>
-  <h2>Open jobs</h2>
+
+  <h2>Incoming offers</h2>
+  <p *ngIf="!offers.length" class="muted">No open offers right now.</p>
   <ion-list>
-    <ion-item *ngFor="let job of openJobs">
+    <ion-item *ngFor="let offer of offers">
       <ion-label>
-        <h2>{{ job.title }}</h2>
-        <p>{{ job.category?.name }} · {{ job.suburb }} · {{ zar(job.budget_cents) }}</p>
+        <h2>{{ offer.job?.title }}</h2>
+        <p>
+          {{ offer.job?.category }} · {{ offer.job?.suburb }} ·
+          {{ zar(offer.job?.budget_cents) }} · {{ offer.distance_km | number:'1.1-1' }} km
+        </p>
+        <p>Expires {{ offer.expires_at | date:'shortTime' }}</p>
       </ion-label>
-      <ion-button slot="end" (click)="accept(job.id)">Accept</ion-button>
+      <div class="offer-actions" slot="end">
+        <ion-button color="success" (click)="acceptOffer(offer)">Accept</ion-button>
+        <ion-button fill="outline" (click)="declineOffer(offer)">Decline</ion-button>
+      </div>
     </ion-item>
   </ion-list>
 
@@ -35,4 +44,6 @@
       <ion-badge slot="end">{{ job.status }}</ion-badge>
     </ion-item>
   </ion-list>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
 </ion-content>

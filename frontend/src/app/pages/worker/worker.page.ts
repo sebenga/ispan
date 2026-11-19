@@ -38,9 +38,10 @@ import { AuthService } from '../../core/auth.service';
   styleUrls: ['./worker.page.scss'],
 })
 export class WorkerPage implements OnInit {
-  openJobs: any[] = [];
+  offers: any[] = [];
   myJobs: any[] = [];
   name = '';
+  error = '';
 
   constructor(
     private readonly api: ApiService,
@@ -59,8 +60,14 @@ export class WorkerPage implements OnInit {
   }
 
   reload() {
+    this.api.myOffers().subscribe({
+      next: (res) => {
+        this.offers = (res.results || []).filter((o) =>
+          ['notified', 'seen'].includes(o.status),
+        );
+      },
+    });
     this.api.getJobs().subscribe((jobs) => {
-      this.openJobs = jobs.filter((j) => j.status === 'OPEN' && !j.worker);
       this.myJobs = jobs.filter((j) => j.worker?.id === this.auth.currentUser?.id);
     });
   }
@@ -69,9 +76,23 @@ export class WorkerPage implements OnInit {
     return `R${(cents / 100).toFixed(0)}`;
   }
 
-  accept(id: string) {
-    this.api.acceptJob(id).subscribe(() => {
-      void this.router.navigateByUrl(`/worker/jobs/${id}`);
+  acceptOffer(offer: any) {
+    this.error = '';
+    this.api.acceptOffer(offer.job.id, offer.id).subscribe({
+      next: (job) => {
+        void this.router.navigateByUrl(`/worker/jobs/${job.id}`);
+      },
+      error: (err) => {
+        this.error = err?.error?.detail || 'Accept failed';
+        this.reload();
+      },
+    });
+  }
+
+  declineOffer(offer: any) {
+    this.api.declineOffer(offer.job.id, offer.id).subscribe({
+      next: () => this.reload(),
+      error: (err) => (this.error = err?.error?.detail || 'Decline failed'),
     });
   }
 
