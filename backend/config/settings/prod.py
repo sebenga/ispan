@@ -41,7 +41,10 @@ CSRF_COOKIE_SECURE = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-CORS_ALLOW_ALL_ORIGINS = False
+# SPA is same-origin on Render; allow onrender.com origins for Socket.IO / tooling.
+CORS_ALLOW_ALL_ORIGINS = env_bool("CORS_ALLOW_ALL_ORIGINS", False)
+if env("RENDER") and not CORS_ALLOWED_ORIGINS:
+    CORS_ALLOW_ALL_ORIGINS = True
 JOBS_INLINE = env_bool("JOBS_INLINE", bool(env("RENDER")))
 REALTIME_POLLING = env_bool("REALTIME_POLLING", bool(env("RENDER")))
 

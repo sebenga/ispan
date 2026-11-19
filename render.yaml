@@ -1,6 +1,8 @@
 # iSpan — Render Blueprint (Frankfurt)
 # SPA is built into the API Docker image and served by Django/WhiteNoise.
-# Free tier is acceptable for the MVP (cold starts and Postgres limits apply).
+#
+# Note: this workspace already has a Free Postgres + Free Key Value (Fair Measure),
+# so iSpan uses the smallest paid datastore plans.
 
 envVarGroups:
   - name: ispan-secrets
@@ -16,7 +18,7 @@ envVarGroups:
 
 databases:
   - name: ispan-db
-    plan: free
+    plan: 0.1c-256mb
     region: frankfurt
     databaseName: ispan
     user: ispan
@@ -24,7 +26,7 @@ databases:
 services:
   - type: keyvalue
     name: ispan-kv
-    plan: free
+    plan: 256mb
     region: frankfurt
     ipAllowList: []
     maxmemoryPolicy: allkeys-lru
@@ -44,13 +46,15 @@ services:
       - key: DJANGO_DEBUG
         value: "false"
       - key: DJANGO_ALLOWED_HOSTS
-        value: ispan-api.onrender.com,.onrender.com
+        value: ".onrender.com"
       - key: CORS_ALLOWED_ORIGINS
-        value: https://ispan-api.onrender.com
+        value: https://ispan-api.onrender.com,https://ispan-api-2oct.onrender.com
       - key: PUBLIC_APP_ORIGIN
         value: https://ispan-api.onrender.com
       - key: PUBLIC_API_ORIGIN
         value: https://ispan-api.onrender.com
+      - key: PUBLIC_REALTIME_ORIGIN
+        value: https://ispan-realtime.onrender.com
       - key: LEGAL_VERSION
         value: "2026-11-19"
       - key: PAYMENT_PROVIDER
@@ -96,4 +100,4 @@ services:
       - key: REALTIME_EVENT_CHANNEL
         value: ispan:events
       - key: REALTIME_CORS_ORIGINS
-        value: https://ispan-api.onrender.com
+        value: https://ispan-api.onrender.com,https://ispan-api-2oct.onrender.com
