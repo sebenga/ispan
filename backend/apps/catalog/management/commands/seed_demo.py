@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 
 from apps.accounts.models import WorkerProfile
 from apps.catalog.models import ServiceCategory, WorkerService
+from apps.customers.models import CustomerProfile
 
 User = get_user_model()
 
@@ -16,7 +17,7 @@ CATEGORIES = [
 
 
 class Command(BaseCommand):
-    help = "Seed service categories and demo customer/worker accounts"
+    help = "Seed service categories and demo customer/worker/admin accounts"
 
     def handle(self, *args, **options):
         for slug, name, desc, lo, hi in CATEGORIES:
@@ -34,7 +35,9 @@ class Command(BaseCommand):
             email="customer@ispan.test",
             defaults={
                 "phone": "+27820000001",
-                "role": User.Role.CUSTOMER,
+                "role": User.ActiveProfile.CUSTOMER,
+                "active_profile": User.ActiveProfile.CUSTOMER,
+                "is_customer": True,
                 "first_name": "Thandi",
                 "last_name": "Molefe",
                 "email_verified": True,
@@ -42,13 +45,18 @@ class Command(BaseCommand):
             },
         )
         customer.set_password("password123")
+        customer.is_customer = True
         customer.save()
+        CustomerProfile.objects.get_or_create(user=customer)
 
         worker, _ = User.objects.get_or_create(
             email="worker@ispan.test",
             defaults={
                 "phone": "+27820000002",
-                "role": User.Role.WORKER,
+                "role": User.ActiveProfile.WORKER,
+                "active_profile": User.ActiveProfile.WORKER,
+                "is_customer": True,
+                "is_worker": True,
                 "first_name": "Sipho",
                 "last_name": "Ndlovu",
                 "email_verified": True,
@@ -56,11 +64,15 @@ class Command(BaseCommand):
             },
         )
         worker.set_password("password123")
+        worker.is_worker = True
+        worker.is_customer = True
         worker.save()
+        CustomerProfile.objects.get_or_create(user=worker)
 
         profile, _ = WorkerProfile.objects.get_or_create(
             user=worker,
             defaults={
+                "display_name": "Sipho Ndlovu",
                 "bio": "Licensed electrician with 8 years experience across Cape Town.",
                 "verification_status": WorkerProfile.VerificationStatus.VERIFIED,
                 "bank_verified": True,
@@ -76,8 +88,31 @@ class Command(BaseCommand):
         )
         if profile.verification_status != WorkerProfile.VerificationStatus.VERIFIED:
             profile.verification_status = WorkerProfile.VerificationStatus.VERIFIED
+            profile.bank_verified = True
             profile.is_available = True
             profile.save()
+
+        admin, _ = User.objects.get_or_create(
+            email="admin@ispan.test",
+            defaults={
+                "phone": "+27820000099",
+                "role": "ADMIN",
+                "active_profile": User.ActiveProfile.CUSTOMER,
+                "is_customer": True,
+                "is_support": True,
+                "is_staff": True,
+                "is_superuser": True,
+                "first_name": "Admin",
+                "last_name": "iSpan",
+                "email_verified": True,
+                "phone_verified": True,
+            },
+        )
+        admin.set_password("password123")
+        admin.is_staff = True
+        admin.is_superuser = True
+        admin.is_support = True
+        admin.save()
 
         electrician = ServiceCategory.objects.get(slug="electrician")
         WorkerService.objects.update_or_create(
@@ -89,3 +124,4 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Seeded categories + demo users"))
         self.stdout.write("  customer@ispan.test / password123")
         self.stdout.write("  worker@ispan.test / password123")
+        self.stdout.write("  admin@ispan.test / password123 (verification queue)")
