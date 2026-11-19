@@ -1,4 +1,5 @@
 # iSpan — Render Blueprint (Frankfurt)
+# SPA is built into the API Docker image and served by Django/WhiteNoise.
 # Free tier is acceptable for the MVP (cold starts and Postgres limits apply).
 
 envVarGroups:
@@ -34,6 +35,7 @@ services:
     plan: free
     region: frankfurt
     dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /healthz
     envVars:
       - fromGroup: ispan-secrets
@@ -42,11 +44,11 @@ services:
       - key: DJANGO_DEBUG
         value: "false"
       - key: DJANGO_ALLOWED_HOSTS
-        value: ispan-api.onrender.com
+        value: ispan-api.onrender.com,.onrender.com
       - key: CORS_ALLOWED_ORIGINS
-        value: https://ispan-web.onrender.com
+        value: https://ispan-api.onrender.com
       - key: PUBLIC_APP_ORIGIN
-        value: https://ispan-web.onrender.com
+        value: https://ispan-api.onrender.com
       - key: PUBLIC_API_ORIGIN
         value: https://ispan-api.onrender.com
       - key: LEGAL_VERSION
@@ -94,25 +96,4 @@ services:
       - key: REALTIME_EVENT_CHANNEL
         value: ispan:events
       - key: REALTIME_CORS_ORIGINS
-        value: https://ispan-web.onrender.com
-
-  - type: web
-    name: ispan-worker
-    runtime: docker
-    plan: free
-    region: frankfurt
-    dockerfilePath: ./Dockerfile
-    dockerCommand: python -c "import time; print('worker placeholder — Celery/RQ in later phase'); time.sleep(3600)"
-    envVars:
-      - fromGroup: ispan-secrets
-      - key: DJANGO_SETTINGS_MODULE
-        value: config.settings.prod
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ispan-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: ispan-kv
-          type: keyvalue
-          property: connectionString
+        value: https://ispan-api.onrender.com
