@@ -57,7 +57,14 @@ export class LoginPage {
     this.auth.login(this.email, this.password).subscribe({
       next: (res) => {
         this.loading = false;
-        void this.router.navigateByUrl(res.user.role === 'WORKER' ? '/worker' : '/customer');
+        const u = res.user;
+        if (u.is_support || u.role === 'ADMIN') {
+          void this.router.navigateByUrl('/admin/verification');
+        } else if (u.is_worker || u.role === 'WORKER' || u.active_profile === 'WORKER') {
+          void this.router.navigateByUrl('/worker');
+        } else {
+          void this.router.navigateByUrl('/customer');
+        }
       },
       error: (err) => {
         this.loading = false;

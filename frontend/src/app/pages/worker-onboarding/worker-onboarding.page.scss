@@ -1,0 +1,28 @@
+.status {
+  margin-bottom: 1rem;
+}
+
+.muted {
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}
+
+.ok {
+  color: var(--ion-color-success-shade, #2dd36f);
+  margin-top: 1rem;
+}
+
+.error {
+  color: var(--ion-color-danger);
+  margin-top: 0.5rem;
+}
+
+h2 {
+  margin-top: 1.75rem;
+  font-size: 1.05rem;
+}
+
+input[type='file'] {
+  margin: 0.75rem 0;
+  width: 100%;
+}

@@ -17,7 +17,13 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
             "email": self.user.email,
             "phone": self.user.phone,
             "role": self.user.role,
+            "is_customer": self.user.is_customer,
+            "is_worker": self.user.is_worker,
+            "is_support": self.user.is_support,
+            "active_profile": self.user.active_profile,
             "first_name": self.user.first_name,
             "last_name": self.user.last_name,
+            "email_verified": self.user.email_verified,
+            "phone_verified": self.user.phone_verified,
         }
         return data

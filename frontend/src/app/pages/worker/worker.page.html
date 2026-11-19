@@ -2,12 +2,18 @@
   <ion-toolbar color="dark">
     <ion-title>{{ name }}'s board</ion-title>
     <ion-buttons slot="end">
+      <ion-button routerLink="/worker/onboarding">Verification</ion-button>
       <ion-button (click)="logout()">Log out</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+  <p class="verify-hint">
+    Complete
+    <a routerLink="/worker/onboarding">worker verification</a>
+    before payouts and restricted matches.
+  </p>
   <h2>Open jobs</h2>
   <ion-list>
     <ion-item *ngFor="let job of openJobs">

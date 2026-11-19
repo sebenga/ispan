@@ -10,6 +10,8 @@ from apps.core.views import health_check
 api_v1 = [
     path("auth/", include("apps.accounts.urls")),
     path("legal/", include("apps.legal.urls")),
+    path("", include("apps.workers.urls")),
+    path("", include("apps.notifications.urls")),
     path("", include("apps.catalog.urls")),
     path("", include("apps.jobs.urls")),
 ]

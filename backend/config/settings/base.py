@@ -143,6 +143,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "mediafiles"
+PRIVATE_MEDIA_ROOT = env("PRIVATE_MEDIA_ROOT", str(BASE_DIR / "private_media"))
 SPA_DIR = env("SPA_DIR", str(PROJECT_ROOT / "frontend" / "www"))
 
 STORAGES = {

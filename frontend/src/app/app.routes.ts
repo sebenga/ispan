@@ -44,6 +44,27 @@ export const routes: Routes = [
       import('./pages/register/register.page').then((m) => m.RegisterPage),
   },
   {
+    path: 'otp',
+    canActivate: [legalGuard],
+    loadComponent: () => import('./pages/otp/otp.page').then((m) => m.OtpPage),
+  },
+  {
+    path: 'worker/onboarding',
+    canActivate: [legalGuard],
+    loadComponent: () =>
+      import('./pages/worker-onboarding/worker-onboarding.page').then(
+        (m) => m.WorkerOnboardingPage,
+      ),
+  },
+  {
+    path: 'admin/verification',
+    canActivate: [legalGuard],
+    loadComponent: () =>
+      import('./pages/admin-verification/admin-verification.page').then(
+        (m) => m.AdminVerificationPage,
+      ),
+  },
+  {
     path: 'customer',
     canActivate: [legalGuard],
     loadComponent: () =>

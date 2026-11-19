@@ -1,0 +1,98 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/worker"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Worker verification</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="status" *ngIf="me">
+    <ion-badge [color]="me.verification_status === 'VERIFIED' ? 'success' : 'warning'">
+      {{ me.verification_status }}
+    </ion-badge>
+    <p *ngIf="me.rejection_reason" class="error">{{ me.rejection_reason }}</p>
+    <p class="muted">
+      Payouts:
+      {{ me.can_receive_payouts ? 'enabled' : 'blocked until verified' }}
+    </p>
+  </div>
+
+  <h2>1. Profile</h2>
+  <ion-list>
+    <ion-item>
+      <ion-textarea
+        label="Bio / skills"
+        labelPlacement="stacked"
+        [(ngModel)]="bio"
+        autoGrow="true"
+      ></ion-textarea>
+    </ion-item>
+  </ion-list>
+  <ion-button expand="block" fill="outline" (click)="saveBio()">Save profile</ion-button>
+
+  <h2>2. Identity document</h2>
+  <p class="muted">SA ID format is checked (checksum only — not Home Affairs).</p>
+  <ion-list>
+    <ion-item>
+      <ion-select label="Document type" labelPlacement="stacked" [(ngModel)]="docType">
+        <ion-select-option value="sa_id">South African ID</ion-select-option>
+        <ion-select-option value="passport">Passport</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="ID / passport number"
+        labelPlacement="stacked"
+        [(ngModel)]="idNumber"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Scan or photo (PDF/JPEG/PNG)</ion-label>
+      <input type="file" accept="image/*,application/pdf" (change)="onFile($event)" />
+    </ion-item>
+  </ion-list>
+  <ion-button expand="block" fill="outline" (click)="uploadId()" [disabled]="loading">
+    Upload document
+  </ion-button>
+
+  <h2>3. Bank account</h2>
+  <ion-list>
+    <ion-item>
+      <ion-input label="Account holder" labelPlacement="stacked" [(ngModel)]="holderName"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Bank" labelPlacement="stacked" [(ngModel)]="bankName"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="Account number"
+        labelPlacement="stacked"
+        [(ngModel)]="accountNumber"
+        type="password"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Branch code" labelPlacement="stacked" [(ngModel)]="branchCode"></ion-input>
+    </ion-item>
+  </ion-list>
+  <ion-button expand="block" fill="outline" (click)="saveBank()" [disabled]="loading">
+    Save bank details
+  </ion-button>
+
+  <h2>4. Submit for review</h2>
+  <ion-button
+    expand="block"
+    color="warning"
+    (click)="submit()"
+    [disabled]="loading || me?.verification_status === 'SUBMITTED' || me?.verification_status === 'VERIFIED'"
+  >
+    Submit for verification
+  </ion-button>
+
+  <p class="ok" *ngIf="message">{{ message }}</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <ion-button expand="block" fill="clear" routerLink="/worker">Back to jobs</ion-button>
+</ion-content>

@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/register"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Verify contact</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <p class="lede">Confirm your email and mobile. {{ hint }}</p>
+
+  <h2>Email</h2>
+  <ion-list *ngIf="!emailDone">
+    <ion-item>
+      <ion-input
+        label="Email code"
+        labelPlacement="stacked"
+        [(ngModel)]="emailCode"
+        inputmode="numeric"
+        maxlength="6"
+      ></ion-input>
+    </ion-item>
+  </ion-list>
+  <ion-button *ngIf="!emailDone" expand="block" (click)="verifyEmail()" [disabled]="loading">
+    Verify email
+  </ion-button>
+  <p *ngIf="emailDone" class="ok">Email verified.</p>
+
+  <h2>Mobile</h2>
+  <ion-list *ngIf="!phoneDone">
+    <ion-item>
+      <ion-input
+        label="SMS code"
+        labelPlacement="stacked"
+        [(ngModel)]="phoneCode"
+        inputmode="numeric"
+        maxlength="6"
+      ></ion-input>
+    </ion-item>
+  </ion-list>
+  <ion-button *ngIf="!phoneDone" expand="block" (click)="verifyPhone()" [disabled]="loading">
+    Verify mobile
+  </ion-button>
+  <p *ngIf="phoneDone" class="ok">Mobile verified.</p>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+</ion-content>

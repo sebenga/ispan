@@ -9,9 +9,22 @@ export interface AuthUser {
   id: string;
   email: string;
   phone: string;
-  role: 'CUSTOMER' | 'WORKER' | 'ADMIN';
+  role: string;
+  is_customer?: boolean;
+  is_worker?: boolean;
+  is_support?: boolean;
+  active_profile?: string;
   first_name: string;
   last_name: string;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+}
+
+interface AuthResponse {
+  access: string;
+  refresh: string;
+  user: AuthUser;
+  otp?: { hint?: string };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,25 +49,32 @@ export class AuthService {
   }
 
   register(payload: Record<string, unknown>) {
-    return this.http.post<AuthUser>(`${environment.apiBaseUrl}/auth/register/`, payload).pipe(
-      tap(() => {
-        /* register then login */
-      }),
-    );
+    return this.http
+      .post<AuthResponse>(`${environment.apiBaseUrl}/auth/register/`, payload)
+      .pipe(tap((res) => this.persist(res)));
   }
 
   login(email: string, password: string) {
     return this.http
-      .post<{ access: string; refresh: string; user: AuthUser }>(
-        `${environment.apiBaseUrl}/auth/login/`,
-        { email, password },
-      )
+      .post<AuthResponse>(`${environment.apiBaseUrl}/auth/login/`, { email, password })
+      .pipe(tap((res) => this.persist(res)));
+  }
+
+  verifyOtp(purpose: string, destination: string, code: string) {
+    return this.http.post<{ email_verified?: boolean; phone_verified?: boolean }>(
+      `${environment.apiBaseUrl}/auth/otp/verify/`,
+      { purpose, destination, code },
+      { headers: this.authHeaders() },
+    );
+  }
+
+  refreshMe() {
+    return this.http
+      .get<AuthUser>(`${environment.apiBaseUrl}/auth/me/`, { headers: this.authHeaders() })
       .pipe(
-        tap((res) => {
-          localStorage.setItem('ispan_access', res.access);
-          localStorage.setItem('ispan_refresh', res.refresh);
-          localStorage.setItem('ispan_user', JSON.stringify(res.user));
-          this.user$.next(res.user);
+        tap((user) => {
+          localStorage.setItem('ispan_user', JSON.stringify(user));
+          this.user$.next(user);
         }),
       );
   }
@@ -65,6 +85,18 @@ export class AuthService {
     localStorage.removeItem('ispan_user');
     this.user$.next(null);
     void this.router.navigateByUrl('/login');
+  }
+
+  private persist(res: AuthResponse) {
+    localStorage.setItem('ispan_access', res.access);
+    localStorage.setItem('ispan_refresh', res.refresh);
+    localStorage.setItem('ispan_user', JSON.stringify(res.user));
+    this.user$.next(res.user);
+  }
+
+  private authHeaders() {
+    const token = this.accessToken;
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   private readUser(): AuthUser | null {

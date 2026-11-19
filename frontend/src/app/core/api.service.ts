@@ -11,11 +11,10 @@ export class ApiService {
     private readonly auth: AuthService,
   ) {}
 
-  private headers() {
+  private headers(extra?: Record<string, string>) {
     const token = this.auth.accessToken;
-    return token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : new HttpHeaders();
+    const base = token ? { Authorization: `Bearer ${token}` } : {};
+    return new HttpHeaders({ ...base, ...extra });
   }
 
   getCategories() {
@@ -69,5 +68,57 @@ export class ApiService {
     return this.http.patch<any>(`${environment.apiBaseUrl}/auth/worker/profile/`, payload, {
       headers: this.headers(),
     });
+  }
+
+  getWorkerMe() {
+    return this.http.get<any>(`${environment.apiBaseUrl}/workers/me/`, {
+      headers: this.headers(),
+    });
+  }
+
+  patchWorkerMe(payload: Record<string, unknown>) {
+    return this.http.patch<any>(`${environment.apiBaseUrl}/workers/me/`, payload, {
+      headers: this.headers(),
+    });
+  }
+
+  uploadWorkerDocument(form: FormData) {
+    return this.http.post<any>(`${environment.apiBaseUrl}/workers/me/documents/`, form, {
+      headers: this.headers(),
+    });
+  }
+
+  saveBank(payload: Record<string, unknown>) {
+    return this.http.put<any>(`${environment.apiBaseUrl}/workers/me/bank/`, payload, {
+      headers: this.headers(),
+    });
+  }
+
+  addCertificate(form: FormData) {
+    return this.http.post<any>(`${environment.apiBaseUrl}/workers/me/certificates/`, form, {
+      headers: this.headers(),
+    });
+  }
+
+  submitVerification() {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/workers/me/submit/`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
+  adminVerificationQueue() {
+    return this.http.get<{ results: any[] }>(`${environment.apiBaseUrl}/admin/verification/`, {
+      headers: this.headers(),
+    });
+  }
+
+  adminVerificationDecision(workerId: string, decision: 'approve' | 'reject', reason = '') {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/admin/verification/${workerId}/`,
+      { decision, reason },
+      { headers: this.headers() },
+    );
   }
 }

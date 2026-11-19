@@ -1,0 +1,38 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Verification queue</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="reload()">Refresh</ion-button>
+      <ion-button (click)="logout()">Log out</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <p class="muted" *ngIf="!loading && !rows.length">No submissions waiting.</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <ion-list *ngIf="rows.length">
+    <ion-item *ngFor="let row of rows" lines="full">
+      <ion-label>
+        <h2>{{ row.name }}</h2>
+        <p>{{ row.email }} · {{ row.phone }}</p>
+        <p>
+          {{ row.id_document_type || 'no id type' }}
+          {{ row.id_number_masked }} · bank {{ row.bank_account_masked || '—' }}
+        </p>
+        <p>Status: {{ row.verification_status }} · docs: {{ row.documents?.length || 0 }}</p>
+        <ion-textarea
+          label="Reject reason"
+          labelPlacement="stacked"
+          [(ngModel)]="reasons[row.id]"
+          autoGrow="true"
+        ></ion-textarea>
+        <div class="actions">
+          <ion-button size="small" color="success" (click)="approve(row.id)">Approve</ion-button>
+          <ion-button size="small" color="danger" (click)="reject(row.id)">Reject</ion-button>
+        </div>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>

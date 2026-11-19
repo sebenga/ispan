@@ -1,0 +1,19 @@
+.lede {
+  color: var(--ion-color-medium);
+  margin-bottom: 1.25rem;
+}
+
+.ok {
+  color: var(--ion-color-success-shade, #2dd36f);
+  font-weight: 600;
+}
+
+.error {
+  color: var(--ion-color-danger);
+  margin-top: 1rem;
+}
+
+h2 {
+  margin-top: 1.5rem;
+  font-size: 1.05rem;
+}

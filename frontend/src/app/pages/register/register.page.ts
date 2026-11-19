@@ -17,6 +17,7 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
@@ -68,25 +69,21 @@ export class RegisterPage {
         phone: this.phone,
         password: this.password,
         role: this.role,
+        consent_version: environment.legalVersion,
+        consent_flags: {
+          age_18: true,
+          terms: true,
+          privacy: true,
+        },
       })
       .subscribe({
         next: () => {
-          this.auth.login(this.email, this.password).subscribe({
-            next: (res) => {
-              this.loading = false;
-              void this.router.navigateByUrl(
-                res.user.role === 'WORKER' ? '/worker' : '/customer',
-              );
-            },
-            error: () => {
-              this.loading = false;
-              void this.router.navigateByUrl('/login');
-            },
-          });
+          this.loading = false;
+          void this.router.navigateByUrl('/otp');
         },
         error: (err) => {
           this.loading = false;
-          this.error = err?.error?.detail || 'Registration failed';
+          this.error = err?.error?.detail || err?.error?.email?.[0] || 'Registration failed';
         },
       });
   }
