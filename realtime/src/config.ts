@@ -26,8 +26,10 @@ function list(name: string, fallback: string): string[] {
 export const config = {
   port: Number(optional('PORT', optional('REALTIME_PORT', '4000'))),
   redisUrl: optional('REDIS_URL', 'redis://localhost:6379/0'),
-  jwtSecret: required('JWT_SIGNING_KEY'),
+  jwtSecret: optional('JWT_SIGNING_KEY', optional('SECRET_KEY', 'dev-insecure-change-me')),
   jwtAlgorithm: 'HS256' as const,
   corsOrigins: list('REALTIME_CORS_ORIGINS', 'http://localhost:8100,http://localhost:4200'),
   eventChannel: optional('REALTIME_EVENT_CHANNEL', 'ispan:events'),
+  djangoApiBase: optional('DJANGO_API_BASE', 'http://localhost:8001/api/v1'),
+  internalToken: optional('INTERNAL_API_TOKEN', 'dev-internal-token'),
 };

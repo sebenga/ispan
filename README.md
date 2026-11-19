@@ -71,3 +71,4 @@ This repo follows the phased build plan in the product brief.
 - **Phase 0** — scaffold, legal gate, health checks, Blueprint, docs
 - **Phase 1** — registration, mock OTP, JWT, dual profiles, verification queue
 - **Phase 2** — category tree, jobs, matching (offers/race/radius), quotes, cancellation snapshots
+- **Phase 3** — Socket.IO GPS/chat/SOS, navigation deep links, location status guards

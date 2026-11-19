@@ -1,5 +1,12 @@
 from django.urls import path
 
+from .realtime_views import (
+    JobChatView,
+    JobEventsView,
+    JobLocationView,
+    JobNavigationView,
+    JobSosView,
+)
 from .views import (
     JobAcceptView,
     JobCancelView,
@@ -25,6 +32,11 @@ urlpatterns = [
     path("jobs/<uuid:job_id>/rate/", JobRateView.as_view(), name="job-rate"),
     path("jobs/<uuid:job_id>/match/tick/", JobMatchTickView.as_view(), name="job-match-tick"),
     path("jobs/<uuid:job_id>/quotes/", QuoteListCreateView.as_view(), name="job-quotes"),
+    path("jobs/<uuid:job_id>/chat/", JobChatView.as_view(), name="job-chat"),
+    path("jobs/<uuid:job_id>/location/", JobLocationView.as_view(), name="job-location"),
+    path("jobs/<uuid:job_id>/navigation/", JobNavigationView.as_view(), name="job-navigation"),
+    path("jobs/<uuid:job_id>/sos/", JobSosView.as_view(), name="job-sos"),
+    path("jobs/<uuid:job_id>/events/", JobEventsView.as_view(), name="job-events"),
     path(
         "jobs/<uuid:job_id>/quotes/<uuid:quote_id>/accept/",
         QuoteAcceptView.as_view(),

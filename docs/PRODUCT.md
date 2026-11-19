@@ -37,3 +37,4 @@ Standalone “Uber for labour” marketplace. Launch city: **Cape Town**, with c
 - Phase 2 matching is server-side (haversine + bounding box). Accept race uses `select_for_update`; losers get `409` / `lost_race`.
 - Cancellation fees use the policy snapshotted on the job at booking; settlement lands in Phase 4.
 - Declining an offer never creates a strike.
+- Phase 3: location pings only in `EN_ROUTE` / `ARRIVED` / `IN_PROGRESS`. Socket rooms are authorised via Django internal API. SOS never claims to replace 10111 / 10177 / 112.

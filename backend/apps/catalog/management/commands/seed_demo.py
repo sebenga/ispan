@@ -5,6 +5,7 @@ from apps.accounts.models import WorkerProfile
 from apps.catalog.models import ServiceCategory, WorkerService
 from apps.customers.models import CustomerProfile
 from apps.scheduling.models import MatchingConfig
+from apps.safety.models import EmergencyContact
 from apps.workers.models import Certificate
 
 User = get_user_model()
@@ -155,6 +156,11 @@ class Command(BaseCommand):
         customer.is_customer = True
         customer.save()
         CustomerProfile.objects.get_or_create(user=customer)
+        EmergencyContact.objects.get_or_create(
+            user=customer,
+            phone="+27821111999",
+            defaults={"name": "Thandi's sister", "relationship": "family", "is_primary": True},
+        )
 
         def make_worker(email, phone, first, last, lat, lng, *, certs=None, categories=None, women=False):
             user, _ = User.objects.get_or_create(
@@ -215,6 +221,11 @@ class Command(BaseCommand):
                     category=cat,
                     defaults={"price_cents": cat.suggested_min_cents, "is_active": True},
                 )
+            EmergencyContact.objects.get_or_create(
+                user=user,
+                phone=f"+2782999{phone[-4:]}",
+                defaults={"name": f"{first}'s emergency", "relationship": "family", "is_primary": True},
+            )
             return user, profile
 
         # Verified electrician with CoC certs near CBD

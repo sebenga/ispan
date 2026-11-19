@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import type { Handshake } from 'socket.io/dist/socket-types';
 
 import { config } from './config.js';
 
@@ -13,8 +12,14 @@ interface AccessToken extends jwt.JwtPayload {
   sub?: string;
 }
 
-export function extractToken(handshake: Handshake): string | null {
-  const auth = handshake.auth as { token?: string } | undefined;
+type HandshakeLike = {
+  auth?: { token?: string };
+  headers: { authorization?: string };
+  query: Record<string, string | string[] | undefined>;
+};
+
+export function extractToken(handshake: HandshakeLike): string | null {
+  const auth = handshake.auth;
   if (auth?.token) return auth.token;
   const header = handshake.headers.authorization;
   if (header?.startsWith('Bearer ')) return header.slice(7);

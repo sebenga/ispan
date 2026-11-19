@@ -11,6 +11,7 @@ from apps.catalog.models import ServiceCategory
 from .cancellation import build_cancellation_policy_text, calculate_cancellation_fee
 from .matching import maybe_widen_job
 from .models import Job, JobOffer, Quote
+from .realtime import latest_location, navigation_links
 from .serializers import (
     JobCreateSerializer,
     JobOfferSerializer,
@@ -159,7 +160,10 @@ class JobDetailView(APIView):
             # Do not re-send raw PINs after create; client should have stored them.
             # Include a flag that pins exist.
             ctx["pins"] = {"start_pin_set": bool(job.start_pin_hash), "finish_pin_set": bool(job.finish_pin_hash)}
-        return Response(JobSerializer(job, context=ctx).data)
+        data = JobSerializer(job, context=ctx).data
+        data["location"] = latest_location(job)
+        data["navigation"] = navigation_links(job)
+        return Response(data)
 
 
 class JobCancelView(APIView):

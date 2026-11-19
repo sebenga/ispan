@@ -112,6 +112,47 @@ export class ApiService {
     );
   }
 
+  getChat(jobId: string) {
+    return this.http.get<{ results: any[] }>(`${environment.apiBaseUrl}/jobs/${jobId}/chat/`, {
+      headers: this.headers(),
+    });
+  }
+
+  postChat(jobId: string, body: string) {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/chat/`,
+      { body },
+      { headers: this.headers() },
+    );
+  }
+
+  getLocation(jobId: string) {
+    return this.http.get<any>(`${environment.apiBaseUrl}/jobs/${jobId}/location/`, {
+      headers: this.headers(),
+    });
+  }
+
+  postLocation(jobId: string, lat: number, lng: number, accuracy_m?: number) {
+    return this.http.post<any>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/location/`,
+      { lat, lng, accuracy_m },
+      { headers: this.headers() },
+    );
+  }
+
+  triggerSos(jobId: string, payload: Record<string, unknown> = {}) {
+    return this.http.post<any>(`${environment.apiBaseUrl}/jobs/${jobId}/sos/`, payload, {
+      headers: this.headers(),
+    });
+  }
+
+  getNavigation(jobId: string) {
+    return this.http.get<{ google_maps: string | null; waze: string | null }>(
+      `${environment.apiBaseUrl}/jobs/${jobId}/navigation/`,
+      { headers: this.headers() },
+    );
+  }
+
   getWorkerProfile() {
     return this.http.get<any>(`${environment.apiBaseUrl}/auth/worker/profile/`, {
       headers: this.headers(),

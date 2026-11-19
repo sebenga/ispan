@@ -16,9 +16,11 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
+import { Subscription } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { RealtimeService } from '../../core/realtime.service';
 
 @Component({
   selector: 'app-job-detail',
@@ -52,12 +54,21 @@ export class JobDetailPage implements OnInit, OnDestroy {
   quoteAmount = 0;
   quoteMessage = '';
   cancelPreview: any = null;
+  chat: any[] = [];
+  chatBody = '';
+  location: any = null;
+  navigation: { google_maps?: string | null; waze?: string | null } | null = null;
+  etaMinutes: number | null = null;
+  sosMessage = '';
   private tickTimer: ReturnType<typeof setInterval> | null = null;
+  private pingTimer: ReturnType<typeof setInterval> | null = null;
+  private rtSub: Subscription | null = null;
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly api: ApiService,
     private readonly auth: AuthService,
+    private readonly realtime: RealtimeService,
     private readonly router: Router,
   ) {}
 
@@ -81,6 +92,8 @@ export class JobDetailPage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.tickTimer) clearInterval(this.tickTimer);
+    if (this.pingTimer) clearInterval(this.pingTimer);
+    this.rtSub?.unsubscribe();
   }
 
   reload(id?: string) {
@@ -89,10 +102,45 @@ export class JobDetailPage implements OnInit, OnDestroy {
     this.api.getJob(jobId).subscribe({
       next: (job) => {
         this.job = job;
+        this.location = job.location;
+        this.navigation = job.navigation;
         this.quoteAmount = Math.round((job.budget_cents || 0) / 100);
         this.maybeStartTick();
+        this.setupRealtime(jobId);
+        this.loadChat(jobId);
+        this.maybeStartWorkerPings();
       },
       error: () => void this.router.navigateByUrl('/'),
+    });
+  }
+
+  private setupRealtime(jobId: string) {
+    this.rtSub?.unsubscribe();
+    this.realtime.joinJob(jobId);
+    this.rtSub = this.realtime.watch().subscribe(({ event, payload }) => {
+      if (payload?.job_id && payload.job_id !== jobId) return;
+      if (event === 'job:location') {
+        this.location = payload;
+        this.etaMinutes = payload.eta_minutes ?? this.etaMinutes;
+      }
+      if (event === 'job:eta') {
+        this.etaMinutes = payload.eta_minutes;
+      }
+      if (event === 'job:chat') {
+        this.chat = [...this.chat, payload];
+      }
+      if (event === 'job:status' || event === 'job:accepted') {
+        this.reload(jobId);
+      }
+      if (event === 'sos:alert') {
+        this.sosMessage = payload.disclaimer || 'SOS alert sent.';
+      }
+    });
+  }
+
+  private loadChat(jobId: string) {
+    this.api.getChat(jobId).subscribe({
+      next: (res) => (this.chat = res.results || []),
     });
   }
 
@@ -112,6 +160,30 @@ export class JobDetailPage implements OnInit, OnDestroy {
     }
   }
 
+  private maybeStartWorkerPings() {
+    if (this.pingTimer) clearInterval(this.pingTimer);
+    if (!this.isWorker || !this.job) return;
+    if (!['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(this.job.status)) return;
+    // Simulated travel toward job coords for demo (device GPS can replace this).
+    let t = 0;
+    this.pingTimer = setInterval(() => {
+      t += 1;
+      const baseLat = this.job.lat ?? -33.9249;
+      const baseLng = this.job.lng ?? 18.4241;
+      const lat = baseLat + 0.008 - t * 0.0008;
+      const lng = baseLng - 0.004 + t * 0.0004;
+      this.api.postLocation(this.job.id, lat, lng, 15).subscribe({
+        next: (payload) => {
+          this.location = payload;
+          this.etaMinutes = payload.eta_minutes;
+        },
+        error: () => {
+          /* status may have left allowed set */
+        },
+      });
+    }, 4000);
+  }
+
   zar(cents: number | null | undefined) {
     if (cents == null) return '—';
     return `R${(cents / 100).toFixed(0)}`;
@@ -120,7 +192,10 @@ export class JobDetailPage implements OnInit, OnDestroy {
   setStatus(status: string) {
     this.error = '';
     this.api.updateJobStatus(this.job.id, status).subscribe({
-      next: (job) => (this.job = job),
+      next: (job) => {
+        this.job = job;
+        this.maybeStartWorkerPings();
+      },
       error: (err) => (this.error = err?.error?.detail || 'Update failed'),
     });
   }
@@ -130,6 +205,36 @@ export class JobDetailPage implements OnInit, OnDestroy {
       next: (job) => (this.job = job),
       error: (err) => (this.error = err?.error?.detail || 'Accept failed'),
     });
+  }
+
+  sendChat() {
+    const body = this.chatBody.trim();
+    if (!body) return;
+    this.api.postChat(this.job.id, body).subscribe({
+      next: (msg) => {
+        this.chat = [...this.chat, msg];
+        this.chatBody = '';
+      },
+      error: (err) => (this.error = err?.error?.detail || 'Chat failed'),
+    });
+  }
+
+  openNav(kind: 'google_maps' | 'waze') {
+    const url = this.navigation?.[kind];
+    if (url) window.open(url, '_blank');
+  }
+
+  triggerSos() {
+    this.api
+      .triggerSos(this.job.id, {
+        lat: this.location?.lat ?? this.job.lat,
+        lng: this.location?.lng ?? this.job.lng,
+        note: 'SOS from app',
+      })
+      .subscribe({
+        next: (res) => (this.sosMessage = res.disclaimer),
+        error: (err) => (this.error = err?.error?.detail || 'SOS failed'),
+      });
   }
 
   submitQuote() {
@@ -182,5 +287,9 @@ export class JobDetailPage implements OnInit, OnDestroy {
       (this.job.status === 'REQUESTED' || this.job.status === 'OFFERED') &&
       this.job.mode === 'instant'
     );
+  }
+
+  showLiveTrack(): boolean {
+    return !!this.job && ['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(this.job.status);
   }
 }

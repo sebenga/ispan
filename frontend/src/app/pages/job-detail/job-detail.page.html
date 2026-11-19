@@ -19,6 +19,20 @@
     </p>
   </div>
 
+  <div class="map-panel" *ngIf="showLiveTrack()">
+    <h3>Live location</h3>
+    <p *ngIf="location">
+      Worker at {{ location.lat | number:'1.5-5' }}, {{ location.lng | number:'1.5-5' }}
+      <span *ngIf="etaMinutes != null"> · ETA ~{{ etaMinutes }} min</span>
+    </p>
+    <p *ngIf="!location" class="muted">Waiting for the first location ping…</p>
+    <p class="muted">Location is shared only while the job is en route / on site (POPIA).</p>
+    <div class="nav-row" *ngIf="isWorker && navigation">
+      <ion-button size="small" (click)="openNav('google_maps')">Google Maps</ion-button>
+      <ion-button size="small" fill="outline" (click)="openNav('waze')">Waze</ion-button>
+    </div>
+  </div>
+
   <ion-list>
     <ion-item>
       <ion-label>
@@ -51,6 +65,22 @@
     <p>Start: <strong>{{ pins.start_pin }}</strong> · Finish: <strong>{{ pins.finish_pin }}</strong></p>
   </div>
 
+  <div class="chat" *ngIf="job.status !== 'REQUESTED' && job.status !== 'OFFERED' && job.status !== 'EXPIRED'">
+    <h3>Chat</h3>
+    <div class="chat-log">
+      <p *ngFor="let m of chat">
+        <strong>{{ m.sender_name || 'User' }}:</strong> {{ m.body }}
+      </p>
+      <p *ngIf="!chat.length" class="muted">No messages yet.</p>
+    </div>
+    <ion-list>
+      <ion-item>
+        <ion-input label="Message" labelPlacement="stacked" [(ngModel)]="chatBody"></ion-input>
+      </ion-item>
+    </ion-list>
+    <ion-button expand="block" fill="outline" (click)="sendChat()">Send</ion-button>
+  </div>
+
   <div *ngIf="isCustomer && job.quotes?.length">
     <h3>Quotes</h3>
     <ion-list>
@@ -59,11 +89,7 @@
           <h2>{{ zar(q.amount_cents) }} · {{ q.status }}</h2>
           <p>{{ q.actor?.first_name }} — {{ q.message }}</p>
         </ion-label>
-        <ion-button
-          *ngIf="q.status === 'proposed'"
-          slot="end"
-          (click)="acceptQuote(q.id)"
-        >
+        <ion-button *ngIf="q.status === 'proposed'" slot="end" (click)="acceptQuote(q.id)">
           Accept
         </ion-button>
       </ion-item>
@@ -101,6 +127,20 @@
       Confirm completion
     </ion-button>
   </div>
+
+  <ion-button
+    *ngIf="showLiveTrack() || job.status === 'ACCEPTED'"
+    expand="block"
+    color="danger"
+    (click)="triggerSos()"
+  >
+    SOS
+  </ion-button>
+  <p class="sos-note" *ngIf="sosMessage">{{ sosMessage }}</p>
+  <p class="muted">
+    SOS alerts iSpan support and your emergency contacts. It does not replace official emergency
+    numbers (police 10111, ambulance 10177, emergency 112).
+  </p>
 
   <ion-button
     *ngIf="job.status !== 'CONFIRMED' && job.status !== 'CANCELLED' && job.status !== 'EXPIRED'"

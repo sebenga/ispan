@@ -159,10 +159,23 @@ class JobEvent(UUIDModel):
 
 
 class JobTracking(UUIDModel):
+    """Coarse location breadcrumb for an active job only (POPIA — short retention)."""
+
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="tracking")
     lat = models.FloatField()
     lng = models.FloatField()
+    accuracy_m = models.FloatField(null=True, blank=True)
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="job_location_pings",
+    )
     recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-recorded_at"]
 
 
 class Message(UUIDModel):
@@ -170,6 +183,9 @@ class Message(UUIDModel):
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
 
 
 class Rating(UUIDModel):

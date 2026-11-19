@@ -134,7 +134,7 @@ def broadcast_offers(job: Job, *, widen: bool = False) -> list[JobOffer]:
         )
         offers.append(offer)
         publish_event(
-            event="offer.new",
+            event="offer:new",
             rooms=[f"user:{profile.user_id}"],
             payload={
                 "job_id": str(job.id),

@@ -33,10 +33,10 @@ def job_rooms(job: Job) -> list[str]:
     return rooms
 
 
-def emit_job(job: Job, event: str = "job.updated") -> None:
+def emit_job(job: Job, event: str = "job:status") -> None:
     publish_event(
         event=event,
-        rooms=job_rooms(job),
+        rooms=job_rooms(job) + ["support"],
         payload={"job_id": str(job.id), "status": job.status},
     )
 
@@ -112,7 +112,7 @@ def accept_offer(*, offer: JobOffer, worker) -> Job:
         to_status=Job.Status.ACCEPTED,
         offer_id=str(offer.id),
     )
-    emit_job(job, "job.accepted")
+    emit_job(job, "job:accepted")
     return job
 
 
@@ -170,7 +170,7 @@ def create_quote(*, job: Job, actor, amount_cents: int, message: str = "") -> Qu
         job.status = Job.Status.QUOTED
         job.save(update_fields=["status", "updated_at"])
         log_event(job, "quote_proposed", actor=actor, from_status=prev, to_status=job.status)
-    emit_job(job, "job.quoted")
+    emit_job(job, "job:status")
     return quote
 
 
@@ -207,7 +207,7 @@ def accept_quote(*, job: Job, quote: Quote, customer) -> Job:
         quote_id=str(quote.id),
         amount_cents=quote.amount_cents,
     )
-    emit_job(job, "job.accepted")
+    emit_job(job, "job:accepted")
     return job
 
 
@@ -225,7 +225,7 @@ def advance_status(*, job: Job, actor, new_status: str, pin: str | None = None) 
         job.confirmed_at = timezone.now()
         job.save()
         log_event(job, "confirmed", actor=actor, to_status=job.status)
-        emit_job(job, "job.confirmed")
+        emit_job(job, "job:status")
         return job
 
     if actor.id != job.worker_id:
@@ -292,7 +292,7 @@ def cancel_job(*, job: Job, actor) -> Job:
         to_status=Job.Status.CANCELLED,
         **snapshot,
     )
-    emit_job(job, "job.cancelled")
+    emit_job(job, "job:status")
     return job
 
 

@@ -1,7 +1,7 @@
 /**
  * Socket.IO gateway for iSpan.
- * Django publishes events to Valkey/Redis; this process fans them out to rooms.
- * Django remains the source of truth.
+ * Django owns durable state; this process fans out Redis envelopes and
+ * proxies chat/location/SOS writes back to Django so the DB stays authoritative.
  */
 
 import express from 'express';
@@ -11,10 +11,12 @@ import { Server as SocketServer } from 'socket.io';
 
 import { extractToken, verifyAccessToken } from './auth.js';
 import { config } from './config.js';
+import { authorizeRoom, proxyJobPost } from './django.js';
 
 declare module 'socket.io' {
   interface Socket {
     user?: { id: string; email?: string };
+    accessToken?: string;
   }
 }
 
@@ -31,7 +33,6 @@ const io = new SocketServer(httpServer, {
 let redisOk = false;
 const subscriber = new Redis(config.redisUrl, {
   maxRetriesPerRequest: 1,
-  enableOfflineOnError: false,
   lazyConnect: true,
 });
 
@@ -61,6 +62,7 @@ io.use((socket, next) => {
   }
   try {
     socket.user = verifyAccessToken(token);
+    socket.accessToken = token;
     next();
   } catch {
     next(new Error('Invalid or expired access token'));
@@ -80,11 +82,88 @@ io.on('connection', (socket) => {
     const requested = (Array.isArray(rooms) ? rooms : [rooms]).filter(
       (room): room is string => typeof room === 'string',
     );
-    const allowed = requested.filter(
-      (room) => room === `user:${user.id}` || room.startsWith('job:'),
-    );
-    if (allowed.length) await socket.join(allowed);
-    ack?.({ joined: allowed });
+    const joined: string[] = [];
+    const denied: string[] = [];
+    for (const room of requested) {
+      const ok = await authorizeRoom(user.id, room);
+      if (ok) {
+        await socket.join(room);
+        joined.push(room);
+      } else {
+        denied.push(room);
+      }
+    }
+    ack?.({ joined, denied });
+  });
+
+  socket.on('presence:worker', (payload: { available?: boolean }) => {
+    // Presence is advisory for clients; durable availability stays on WorkerProfile via REST.
+    io.to(`user:${user.id}`).emit('presence:worker', {
+      user_id: user.id,
+      available: Boolean(payload?.available),
+    });
+  });
+
+  socket.on(
+    'job:location',
+    async (
+      payload: { job_id?: string; lat?: number; lng?: number; accuracy_m?: number },
+      ack?: (result: unknown) => void,
+    ) => {
+      if (!payload?.job_id || payload.lat == null || payload.lng == null || !socket.accessToken) {
+        ack?.({ ok: false, code: 'invalid_payload' });
+        return;
+      }
+      const result = await proxyJobPost(
+        `/jobs/${payload.job_id}/location/`,
+        socket.accessToken,
+        {
+          lat: payload.lat,
+          lng: payload.lng,
+          accuracy_m: payload.accuracy_m,
+        },
+      );
+      ack?.(result);
+    },
+  );
+
+  socket.on(
+    'job:chat',
+    async (payload: { job_id?: string; body?: string }, ack?: (result: unknown) => void) => {
+      if (!payload?.job_id || !payload.body || !socket.accessToken) {
+        ack?.({ ok: false, code: 'invalid_payload' });
+        return;
+      }
+      const result = await proxyJobPost(`/jobs/${payload.job_id}/chat/`, socket.accessToken, {
+        body: payload.body,
+      });
+      ack?.(result);
+    },
+  );
+
+  socket.on(
+    'sos:trigger',
+    async (
+      payload: { job_id?: string; lat?: number; lng?: number; note?: string },
+      ack?: (result: unknown) => void,
+    ) => {
+      if (!payload?.job_id || !socket.accessToken) {
+        ack?.({ ok: false, code: 'invalid_payload' });
+        return;
+      }
+      const result = await proxyJobPost(`/jobs/${payload.job_id}/sos/`, socket.accessToken, {
+        lat: payload.lat,
+        lng: payload.lng,
+        note: payload.note,
+      });
+      ack?.(result);
+    },
+  );
+
+  socket.on('offer:seen', (payload: { offer_id?: string }) => {
+    if (payload?.offer_id) {
+      socket.emit('offer:seen', { offer_id: payload.offer_id, user_id: user.id });
+    }
   });
 });
 

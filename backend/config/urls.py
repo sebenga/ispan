@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.core.internal_views import RealtimeAuthorizeView
 from apps.core.spa import spa_index
 from apps.core.views import health_check
 
@@ -14,6 +15,8 @@ api_v1 = [
     path("", include("apps.notifications.urls")),
     path("", include("apps.catalog.urls")),
     path("", include("apps.jobs.urls")),
+    path("", include("apps.safety.urls")),
+    path("internal/realtime/authorize/", RealtimeAuthorizeView.as_view(), name="rt-authorize"),
 ]
 
 urlpatterns = [
